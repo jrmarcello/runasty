@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Background -->
+  <rect width="256" height="256" rx="40" fill="#FC4C02"/>
+  
+  <!-- Runner silhouette -->
+  <g fill="white">
+    <!-- Head -->
+    <circle cx="145" cy="65" r="22"/>
+    
+    <!-- Body/Torso -->
+    <path d="M130 90 L115 150 L145 150 L155 90 Z"/>
+    
+    <!-- Front leg (running) -->
+    <path d="M115 145 L80 200 L95 210 L135 155 Z"/>
+    
+    <!-- Back leg (running) -->
+    <path d="M140 145 L175 210 L190 200 L155 150 Z"/>
+    
+    <!-- Front arm -->
+    <path d="M125 100 L85 130 L95 145 L135 115 Z"/>
+    
+    <!-- Back arm -->
+    <path d="M150 95 L190 115 L185 135 L145 115 Z"/>
+  </g>
+  
+  <!-- Crown (King of the Mountain) -->
+  <g fill="#FFD700">
+    <path d="M120 35 L125 20 L135 30 L145 15 L155 30 L165 20 L170 35 L165 40 L125 40 Z"/>
+  </g>
+</svg>
