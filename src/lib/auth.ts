@@ -14,6 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           scope: "read,activity:read_all",
         },
       },
+      checks: ["state"], // Strava não suporta PKCE, usar apenas state
     }),
   ],
   callbacks: {
