@@ -24,8 +24,8 @@ export interface Profile {
 }
 
 export interface ProfileInsert {
-  id: string
-  strava_id?: number | null
+  id?: string // Opcional quando usando strava_id como chave
+  strava_id: number // Obrigatório - usado como identificador único do Strava
   username?: string | null
   full_name?: string | null
   avatar_url?: string | null

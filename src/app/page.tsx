@@ -1,44 +1,84 @@
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from "next/navigation"
+import Image from "next/image"
+import { auth } from "@/lib/auth"
+import { LogoutButton } from "@/components/auth/logout-button"
 
 export default async function Home() {
-  const supabase = await createClient()
-  
-  // Teste de conexão - busca a sessão atual
-  const { data: { user }, error } = await supabase.auth.getUser()
+  const session = await auth()
 
-  const connectionStatus = error?.message?.includes('Invalid API key') 
-    ? '❌ Chaves do Supabase não configuradas'
-    : error 
-      ? `⚠️ Erro: ${error.message}`
-      : '✅ Conectado ao Supabase'
+  // Se não estiver logado, redireciona para login
+  if (!session?.user) {
+    redirect("/login")
+  }
+
+  const { user } = session
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center p-8">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">🏃‍♂️ Runasty</h1>
-        <p className="text-gray-600 mb-6">Ranking de Recordes Pessoais</p>
-        
-        <div className="bg-gray-100 rounded-lg p-4 mb-6">
-          <p className="text-sm text-gray-500 mb-1">Status da Conexão</p>
-          <p className="font-medium">{connectionStatus}</p>
+    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+      {/* Header */}
+      <header className="border-b border-gray-700">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">
+            <span className="text-orange-500">Run</span>asty
+          </h1>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {user.image && (
+                <Image
+                  src={user.image}
+                  alt={user.name || "Avatar"}
+                  width={36}
+                  height={36}
+                  className="rounded-full"
+                />
+              )}
+              <span className="text-sm text-gray-300">{user.name}</span>
+            </div>
+            <LogoutButton />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">
+            Bem-vindo, {user.name?.split(" ")[0]}! 🎉
+          </h2>
+          <p className="text-gray-400">
+            Sua conta Strava foi conectada com sucesso.
+          </p>
         </div>
 
-        {user ? (
-          <div className="bg-green-100 rounded-lg p-4">
-            <p className="text-green-800">Logado como: {user.email}</p>
-          </div>
-        ) : (
-          <button 
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-            disabled
-          >
-            Entrar com Strava (em breve)
-          </button>
-        )}
+        {/* Ranking Cards Placeholder */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {["5K", "10K", "21K"].map((distance) => (
+            <div
+              key={distance}
+              className="bg-gray-800 rounded-xl p-6 text-center border border-gray-700"
+            >
+              <span className="text-4xl mb-4 block">🏃‍♂️</span>
+              <h3 className="text-xl font-bold text-orange-400 mb-2">
+                {distance}
+              </h3>
+              <p className="text-gray-500 text-sm">
+                Ranking em breve...
+              </p>
+            </div>
+          ))}
+        </div>
 
-        <p className="text-xs text-gray-400 mt-6">
-          Milestone 1 - Issue #1 ✅
-        </p>
+        {/* Status */}
+        <div className="bg-gray-800/50 rounded-lg p-6 max-w-md mx-auto text-center">
+          <p className="text-sm text-gray-400 mb-2">Próximo passo:</p>
+          <p className="text-orange-400">
+            📊 Sincronização de atividades do Strava
+          </p>
+          <p className="text-xs text-gray-500 mt-4">
+            Issue #3 ✅ | Issue #4 em andamento
+          </p>
+        </div>
       </div>
     </main>
   )
