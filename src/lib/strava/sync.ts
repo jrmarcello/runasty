@@ -127,6 +127,14 @@ export async function syncUserRecords(
         await supabase.from("records").upsert(record as never, {
           onConflict: "strava_id,distance_type",
         })
+        
+        // Verificar se este tempo faz o usuário virar "Rei da Montanha"
+        await checkAndUpdateKing(
+          supabase,
+          stravaId,
+          record.distance_type,
+          record.time_seconds
+        )
       }
     }
 
@@ -159,4 +167,62 @@ function mapEffortToDistance(effortName: string): DistanceType | null {
   if (effortName === STRAVA_EFFORT_NAMES["10k"]) return "10k"
   if (effortName === STRAVA_EFFORT_NAMES["21k"]) return "21k"
   return null
+}
+
+/**
+ * Verifica se o usuário se tornou o "Rei da Montanha" para uma distância
+ * Se sim, atualiza a tabela ranking_history
+ */
+async function checkAndUpdateKing(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  stravaId: number,
+  distanceType: DistanceType,
+  timeSeconds: number
+): Promise<void> {
+  try {
+    // Buscar o líder atual desta distância (ranking geral, sem filtro de gênero)
+    const { data } = await supabase
+      .from("ranking_history")
+      .select("id, strava_id, record_time_seconds")
+      .eq("distance_type", distanceType)
+      .is("gender_filter", null)
+      .is("ended_at", null)
+      .single()
+
+    const currentKing = data as { 
+      id: string
+      strava_id: number
+      record_time_seconds: number 
+    } | null
+
+    // Se não há líder atual ou o novo tempo é melhor
+    if (!currentKing || timeSeconds < currentKing.record_time_seconds) {
+      // Se há um líder atual e não é o mesmo usuário, fechar seu reinado
+      if (currentKing && currentKing.strava_id !== stravaId) {
+        await supabase
+          .from("ranking_history")
+          .update({ ended_at: new Date().toISOString() } as never)
+          .eq("id", currentKing.id)
+      }
+
+      // Se o novo rei é diferente do atual (ou não há rei), criar novo registro
+      if (!currentKing || currentKing.strava_id !== stravaId) {
+        await supabase.from("ranking_history").insert({
+          strava_id: stravaId,
+          distance_type: distanceType,
+          gender_filter: null, // Ranking geral
+          record_time_seconds: timeSeconds,
+        } as never)
+      } else if (currentKing && currentKing.strava_id === stravaId) {
+        // Mesmo rei, mas tempo melhorou - atualizar o tempo
+        await supabase
+          .from("ranking_history")
+          .update({ record_time_seconds: timeSeconds } as never)
+          .eq("id", currentKing.id)
+      }
+    }
+  } catch (error) {
+    // Log mas não falha a sincronização
+    console.error("Erro ao atualizar rei da montanha:", error)
+  }
 }
