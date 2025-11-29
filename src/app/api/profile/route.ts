@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import type { Profile } from "@/types/database"
 
 // API para verificar o perfil do usuário no Supabase
 // GET /api/profile
@@ -14,7 +15,7 @@ export async function GET() {
   try {
     const supabase = await createClient()
     
-    const { data: profile, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('strava_id', session.user.stravaId)
@@ -24,6 +25,8 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const profile = data as Profile
+
     // Remove tokens sensíveis da resposta
     const safeProfile = {
       ...profile,
@@ -32,7 +35,7 @@ export async function GET() {
     }
 
     return NextResponse.json(safeProfile)
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Erro ao buscar perfil" }, 
       { status: 500 }

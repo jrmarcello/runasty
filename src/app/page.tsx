@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import Image from "next/image"
 import { auth } from "@/lib/auth"
 import { LogoutButton } from "@/components/auth/logout-button"
+import { SyncButton } from "@/components/strava/sync-button"
 
 export default async function Home() {
   const session = await auth()
@@ -47,8 +48,13 @@ export default async function Home() {
             Bem-vindo, {user.name?.split(" ")[0]}! 🎉
           </h2>
           <p className="text-gray-400">
-            Sua conta Strava foi conectada com sucesso.
+            Sincronize seus dados do Strava para ver seus recordes pessoais.
           </p>
+        </div>
+
+        {/* Sync Button */}
+        <div className="max-w-md mx-auto mb-12">
+          <SyncButton />
         </div>
 
         {/* Ranking Cards Placeholder */}
@@ -63,7 +69,7 @@ export default async function Home() {
                 {distance}
               </h3>
               <p className="text-gray-500 text-sm">
-                Ranking em breve...
+                Sincronize para ver seu tempo
               </p>
             </div>
           ))}
@@ -71,12 +77,8 @@ export default async function Home() {
 
         {/* Status */}
         <div className="bg-gray-800/50 rounded-lg p-6 max-w-md mx-auto text-center">
-          <p className="text-sm text-gray-400 mb-2">Próximo passo:</p>
-          <p className="text-orange-400">
-            📊 Sincronização de atividades do Strava
-          </p>
-          <p className="text-xs text-gray-500 mt-4">
-            Issue #3 ✅ | Issue #4 em andamento
+          <p className="text-xs text-gray-500">
+            Milestone 2 - Integração de Dados
           </p>
         </div>
       </div>
