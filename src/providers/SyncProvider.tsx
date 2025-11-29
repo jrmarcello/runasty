@@ -1,7 +1,8 @@
 /**
  * Provider de Sincronização com Strava
  * 
- * Gerencia sincronização automática e fornece contexto para componentes
+ * Com webhook ativo, o sync automático é feito pelo Strava.
+ * Este provider gerencia apenas o sync manual e estado de UI.
  */
 
 "use client"

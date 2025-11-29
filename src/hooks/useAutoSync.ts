@@ -1,38 +1,35 @@
 /**
- * Hook para sincronização automática com Strava
+ * Hook para sincronização com Strava
  * 
- * Estratégia:
- * - Sync no mount (quando usuário abre a página)
- * - Sync a cada 1 hora se a página ficar aberta
- * - Não bloqueia a UI durante sync
+ * Estratégia simplificada (com webhook ativo):
+ * - Webhook do Strava faz sync automático quando atividade é criada
+ * - Usuário pode forçar sync manual quando necessário
+ * - Sem sync automático no frontend (desnecessário com webhook)
  */
 
 "use client"
 
-import { useEffect, useRef, useCallback, useState } from "react"
+import { useCallback, useState } from "react"
 import { useSession } from "next-auth/react"
 
-interface AutoSyncState {
+interface SyncState {
   isSyncing: boolean
   lastSyncMessage: string | null
   lastSyncAt: Date | null
 }
 
-const AUTO_SYNC_INTERVAL_MS = 60 * 60 * 1000 // 1 hora
-
 export function useAutoSync() {
-  const { data: session, status } = useSession()
-  const [state, setState] = useState<AutoSyncState>({
+  const { status } = useSession()
+  const [state, setState] = useState<SyncState>({
     isSyncing: false,
     lastSyncMessage: null,
     lastSyncAt: null,
   })
-  const hasSyncedOnMount = useRef(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const performSync = useCallback(async (isAutoSync = true) => {
-    if (status !== "authenticated" || !session?.user?.stravaId) {
-      return { success: false, skipped: true }
+  // Sync manual (força busca de novos dados)
+  const manualSync = useCallback(async () => {
+    if (status !== "authenticated") {
+      return { success: false, skipped: true, message: "Não autenticado" }
     }
 
     setState(prev => ({ ...prev, isSyncing: true }))
@@ -41,17 +38,16 @@ export function useAutoSync() {
       const response = await fetch("/api/strava/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isAutoSync }),
+        body: JSON.stringify({ isAutoSync: false, force: true }),
       })
 
       const data = await response.json()
 
-      setState(prev => ({
-        ...prev,
+      setState({
         isSyncing: false,
         lastSyncMessage: data.message || data.error,
-        lastSyncAt: data.skipped ? prev.lastSyncAt : new Date(),
-      }))
+        lastSyncAt: data.skipped ? state.lastSyncAt : new Date(),
+      })
 
       return {
         success: response.ok && !data.error,
@@ -65,42 +61,9 @@ export function useAutoSync() {
         lastSyncMessage: "Erro ao conectar com o servidor",
       }))
 
-      return { success: false, skipped: false }
+      return { success: false, skipped: false, message: "Erro de conexão" }
     }
-  }, [session?.user?.stravaId, status])
-
-  // Sync no mount (apenas uma vez)
-  useEffect(() => {
-    if (status === "authenticated" && !hasSyncedOnMount.current) {
-      hasSyncedOnMount.current = true
-      // Pequeno delay para não impactar o carregamento inicial
-      const timeout = setTimeout(() => {
-        performSync(true)
-      }, 2000)
-
-      return () => clearTimeout(timeout)
-    }
-  }, [status, performSync])
-
-  // Sync periódico
-  useEffect(() => {
-    if (status === "authenticated") {
-      intervalRef.current = setInterval(() => {
-        performSync(true)
-      }, AUTO_SYNC_INTERVAL_MS)
-
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-        }
-      }
-    }
-  }, [status, performSync])
-
-  // Função para sync manual (cooldown menor)
-  const manualSync = useCallback(() => {
-    return performSync(false)
-  }, [performSync])
+  }, [status, state.lastSyncAt])
 
   return {
     ...state,

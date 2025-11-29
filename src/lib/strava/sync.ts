@@ -2,11 +2,10 @@
  * Serviço de Sincronização com Strava
  * Issue #5: Buscar e processar dados do Strava
  * 
- * Estratégia de Otimização:
- * - Sync incremental: só busca atividades desde a última sync
- * - Filtragem inteligente: só busca detalhes de corridas com PRs
- * - Rate limiting flexível: 15min para manual, sem limite para auto
- * - Sync automático: no login e a cada hora
+ * Estratégia (com webhook ativo):
+ * - Webhook recebe eventos do Strava e dispara sync automático
+ * - Sync manual disponível via botão "Forçar Sincronização"
+ * - Cooldown de 5 minutos para evitar spam de requests
  */
 
 import { createClient } from "@/lib/supabase/server"
@@ -18,9 +17,8 @@ import {
 } from "./client"
 import type { DistanceType, RecordInsert } from "@/types/database"
 
-// Cooldowns em minutos
-const MANUAL_SYNC_COOLDOWN_MINUTES = 15
-const AUTO_SYNC_COOLDOWN_MINUTES = 60
+// Cooldown único de 5 minutos (proteção contra spam)
+const SYNC_COOLDOWN_MINUTES = 5
 
 interface SyncResult {
   success: boolean
@@ -37,9 +35,9 @@ interface SyncResult {
 }
 
 interface SyncOptions {
-  /** Se true, é sync automático (cooldown mais longo, menos agressivo) */
+  /** Se true, é sync via webhook (sem cooldown) */
   isAutoSync?: boolean
-  /** Se true, força sync ignorando cooldown (usar com cuidado) */
+  /** Se true, força sync ignorando cooldown */
   force?: boolean
 }
 
@@ -70,23 +68,17 @@ export async function syncUserRecords(
       ? new Date(profileData.last_sync_at) 
       : null
 
-    // Cooldown diferente para sync manual vs automático
-    const cooldownMinutes = isAutoSync 
-      ? AUTO_SYNC_COOLDOWN_MINUTES 
-      : MANUAL_SYNC_COOLDOWN_MINUTES
-
-    if (!force && lastSyncDate) {
+    // Webhook (isAutoSync) não tem cooldown, manual tem 5 min
+    if (!force && !isAutoSync && lastSyncDate) {
       const now = new Date()
       const minutesSinceLastSync =
         (now.getTime() - lastSyncDate.getTime()) / (1000 * 60)
 
-      if (minutesSinceLastSync < cooldownMinutes) {
-        const waitMinutes = Math.ceil(cooldownMinutes - minutesSinceLastSync)
+      if (minutesSinceLastSync < SYNC_COOLDOWN_MINUTES) {
+        const waitMinutes = Math.ceil(SYNC_COOLDOWN_MINUTES - minutesSinceLastSync)
         return {
           success: false,
-          message: isAutoSync 
-            ? `Sync automático: aguardando ${waitMinutes} minutos`
-            : `Aguarde ${waitMinutes} minutos para sincronizar novamente`,
+          message: `Aguarde ${waitMinutes} minuto${waitMinutes > 1 ? 's' : ''} para sincronizar novamente`,
           skipped: true,
           apiCalls: 0,
         }
