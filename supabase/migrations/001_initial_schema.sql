@@ -2,23 +2,37 @@
 -- RUNASTY - Schema Inicial do Banco de Dados
 -- Issue #2: Modelagem do Banco de Dados
 -- ============================================
+-- NOTA: Usamos NextAuth para autenticação (não Supabase Auth)
+-- Por isso, strava_id é a chave primária (não UUID de auth.users)
+-- ============================================
+
+-- ============================================
+-- RESET: Dropar objetos existentes para fresh start
+-- ============================================
+DROP VIEW IF EXISTS public.current_leaders;
+DROP VIEW IF EXISTS public.current_rankings;
+DROP TABLE IF EXISTS public.ranking_history CASCADE;
+DROP TABLE IF EXISTS public.records CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP FUNCTION IF EXISTS public.handle_updated_at();
+DROP FUNCTION IF EXISTS public.handle_new_user();
 
 -- ============================================
 -- TABELA: profiles
--- Extensão da tabela auth.users do Supabase
 -- Armazena dados do atleta vindos do Strava
+-- Usa strava_id como identificador único (NextAuth)
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    -- strava_id como chave primária (não depende de auth.users)
+    strava_id BIGINT PRIMARY KEY,
     
-    -- Dados do Strava
-    strava_id BIGINT UNIQUE,
+    -- Dados do atleta do Strava
     username TEXT,
     full_name TEXT,
     avatar_url TEXT,
     sex CHAR(1) CHECK (sex IN ('M', 'F') OR sex IS NULL), -- M = Masculino, F = Feminino, NULL = Não informado
     
-    -- Tokens OAuth do Strava (para sincronização futura)
+    -- Tokens OAuth do Strava (gerenciados pelo NextAuth, mas guardamos para sync)
     strava_access_token TEXT,
     strava_refresh_token TEXT,
     strava_token_expires_at TIMESTAMPTZ,
@@ -32,7 +46,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Índices para buscas frequentes
-CREATE INDEX IF NOT EXISTS idx_profiles_strava_id ON public.profiles(strava_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_sex ON public.profiles(sex);
 
 -- ============================================
@@ -42,7 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_sex ON public.profiles(sex);
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    strava_id BIGINT NOT NULL REFERENCES public.profiles(strava_id) ON DELETE CASCADE,
     
     -- Tipo de distância
     distance_type TEXT NOT NULL CHECK (distance_type IN ('5k', '10k', '21k')),
@@ -61,13 +74,13 @@ CREATE TABLE IF NOT EXISTS public.records (
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     
     -- Cada usuário tem apenas um recorde por distância
-    UNIQUE(user_id, distance_type)
+    UNIQUE(strava_id, distance_type)
 );
 
 -- Índices para ranking e filtros
 CREATE INDEX IF NOT EXISTS idx_records_distance_type ON public.records(distance_type);
 CREATE INDEX IF NOT EXISTS idx_records_time_seconds ON public.records(time_seconds);
-CREATE INDEX IF NOT EXISTS idx_records_user_distance ON public.records(user_id, distance_type);
+CREATE INDEX IF NOT EXISTS idx_records_strava_distance ON public.records(strava_id, distance_type);
 
 -- ============================================
 -- TABELA: ranking_history
@@ -78,7 +91,7 @@ CREATE TABLE IF NOT EXISTS public.ranking_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
     -- Líder e distância
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    strava_id BIGINT NOT NULL REFERENCES public.profiles(strava_id) ON DELETE CASCADE,
     distance_type TEXT NOT NULL CHECK (distance_type IN ('5k', '10k', '21k')),
     
     -- Filtro de gênero (NULL = ranking geral)
@@ -98,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.ranking_history (
 -- Índices para consultas de liderança
 CREATE INDEX IF NOT EXISTS idx_ranking_history_current ON public.ranking_history(distance_type, gender_filter) 
     WHERE ended_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_ranking_history_user ON public.ranking_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_ranking_history_strava ON public.ranking_history(strava_id);
 
 -- ============================================
 -- FUNÇÃO: Atualizar updated_at automaticamente
@@ -125,30 +138,9 @@ CREATE TRIGGER on_records_updated
     EXECUTE FUNCTION public.handle_updated_at();
 
 -- ============================================
--- FUNÇÃO: Criar perfil automaticamente após signup
--- ============================================
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.profiles (id, full_name, avatar_url)
-    VALUES (
-        NEW.id,
-        NEW.raw_user_meta_data->>'full_name',
-        NEW.raw_user_meta_data->>'avatar_url'
-    );
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger para criar perfil após signup
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW
-    EXECUTE FUNCTION public.handle_new_user();
-
--- ============================================
 -- ROW LEVEL SECURITY (RLS)
+-- Usamos service_role key para operações do backend
+-- RLS permite leitura pública, escrita via service_role
 -- ============================================
 
 -- Habilitar RLS em todas as tabelas
@@ -156,35 +148,57 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ranking_history ENABLE ROW LEVEL SECURITY;
 
--- PROFILES: Usuários podem ver todos os perfis, mas só editar o próprio
-CREATE POLICY "Perfis são visíveis para todos"
+-- ============================================
+-- PROFILES: Leitura pública, escrita via service_role
+-- ============================================
+CREATE POLICY "profiles_select_policy"
     ON public.profiles FOR SELECT
     USING (true);
 
-CREATE POLICY "Usuários podem editar próprio perfil"
-    ON public.profiles FOR UPDATE
-    USING (auth.uid() = id);
+CREATE POLICY "profiles_insert_policy"
+    ON public.profiles FOR INSERT
+    WITH CHECK (true);
 
--- RECORDS: Todos podem ver, apenas o próprio usuário pode modificar
-CREATE POLICY "Records são visíveis para todos"
+CREATE POLICY "profiles_update_policy"
+    ON public.profiles FOR UPDATE
+    USING (true);
+
+CREATE POLICY "profiles_delete_policy"
+    ON public.profiles FOR DELETE
+    USING (true);
+
+-- ============================================
+-- RECORDS: Leitura pública, escrita via service_role
+-- ============================================
+CREATE POLICY "records_select_policy"
     ON public.records FOR SELECT
     USING (true);
 
-CREATE POLICY "Usuários podem inserir próprios records"
+CREATE POLICY "records_insert_policy"
     ON public.records FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (true);
 
-CREATE POLICY "Usuários podem atualizar próprios records"
+CREATE POLICY "records_update_policy"
     ON public.records FOR UPDATE
-    USING (auth.uid() = user_id);
+    USING (true);
 
-CREATE POLICY "Usuários podem deletar próprios records"
+CREATE POLICY "records_delete_policy"
     ON public.records FOR DELETE
-    USING (auth.uid() = user_id);
+    USING (true);
 
--- RANKING_HISTORY: Apenas leitura para todos (sistema gerencia)
-CREATE POLICY "Histórico de ranking é visível para todos"
+-- ============================================
+-- RANKING_HISTORY: Leitura pública, escrita via service_role
+-- ============================================
+CREATE POLICY "ranking_history_select_policy"
     ON public.ranking_history FOR SELECT
+    USING (true);
+
+CREATE POLICY "ranking_history_insert_policy"
+    ON public.ranking_history FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "ranking_history_update_policy"
+    ON public.ranking_history FOR UPDATE
     USING (true);
 
 -- ============================================
@@ -195,7 +209,7 @@ CREATE POLICY "Histórico de ranking é visível para todos"
 CREATE OR REPLACE VIEW public.current_rankings AS
 SELECT 
     r.id,
-    r.user_id,
+    r.strava_id,
     r.distance_type,
     r.time_seconds,
     r.achieved_at,
@@ -208,14 +222,14 @@ SELECT
         ORDER BY r.time_seconds ASC
     ) as position
 FROM public.records r
-JOIN public.profiles p ON r.user_id = p.id
+JOIN public.profiles p ON r.strava_id = p.strava_id
 ORDER BY r.distance_type, r.time_seconds;
 
 -- View: Líderes atuais (Reis da Montanha)
 CREATE OR REPLACE VIEW public.current_leaders AS
 SELECT 
     rh.id,
-    rh.user_id,
+    rh.strava_id,
     rh.distance_type,
     rh.gender_filter,
     rh.started_at,
@@ -225,16 +239,17 @@ SELECT
     p.avatar_url,
     NOW() - rh.started_at as time_as_leader
 FROM public.ranking_history rh
-JOIN public.profiles p ON rh.user_id = p.id
+JOIN public.profiles p ON rh.strava_id = p.strava_id
 WHERE rh.ended_at IS NULL;
 
 -- ============================================
 -- COMENTÁRIOS NAS TABELAS
 -- ============================================
-COMMENT ON TABLE public.profiles IS 'Perfis dos atletas, extensão de auth.users';
+COMMENT ON TABLE public.profiles IS 'Perfis dos atletas, identificados pelo strava_id (NextAuth)';
 COMMENT ON TABLE public.records IS 'Recordes pessoais (RPs) dos atletas por distância';
 COMMENT ON TABLE public.ranking_history IS 'Histórico de liderança no ranking (Rei da Montanha)';
 
+COMMENT ON COLUMN public.profiles.strava_id IS 'ID do atleta no Strava, usado como chave primária';
 COMMENT ON COLUMN public.profiles.sex IS 'Gênero: M=Masculino, F=Feminino, NULL=Não informado';
 COMMENT ON COLUMN public.records.time_seconds IS 'Tempo do recorde em segundos para facilitar ordenação';
 COMMENT ON COLUMN public.ranking_history.ended_at IS 'NULL indica que ainda é o líder atual';

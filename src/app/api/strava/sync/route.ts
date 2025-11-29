@@ -18,7 +18,7 @@ export async function POST() {
       )
     }
 
-    const { id, stravaId, accessToken } = session.user
+    const { stravaId, accessToken } = session.user
 
     if (!stravaId || !accessToken) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST() {
       )
     }
 
-    const result = await syncUserRecords(id, stravaId, accessToken)
+    const result = await syncUserRecords(stravaId, accessToken)
 
     if (!result.success) {
       return NextResponse.json(

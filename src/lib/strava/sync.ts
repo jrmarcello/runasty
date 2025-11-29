@@ -27,7 +27,6 @@ interface SyncResult {
  * Busca os melhores tempos do usuário no Strava e salva no banco
  */
 export async function syncUserRecords(
-  userId: string,
   stravaId: number,
   accessToken: string
 ): Promise<SyncResult> {
@@ -59,11 +58,15 @@ export async function syncUserRecords(
 
     // Buscar atividades recentes (últimas 100)
     const activities = await getActivities(accessToken, 1, 100)
+    
+    console.log(`[Sync] Encontradas ${activities.length} atividades`)
 
     // Filtrar apenas corridas
     const runs = activities.filter(
       (a) => a.type === "Run" || a.sport_type === "Run"
     )
+    
+    console.log(`[Sync] ${runs.length} são corridas`)
 
     // Mapa para guardar os melhores tempos encontrados
     const bestEfforts: Map<
@@ -76,14 +79,19 @@ export async function syncUserRecords(
       // Limitar a 20 para não estourar rate limit
       try {
         const details = await getActivityDetails(accessToken, run.id)
+        
+        console.log(`[Sync] Atividade ${run.id}: ${details.best_efforts?.length || 0} best efforts`)
 
         if (details.best_efforts) {
           for (const effort of details.best_efforts) {
             const distance = mapEffortToDistance(effort.name)
-            if (distance && effort.pr_rank === 1) {
-              // É o PR atual!
+            
+            // Pegar qualquer best effort da distância que nos interessa
+            // e manter apenas o menor tempo
+            if (distance) {
               const current = bestEfforts.get(distance)
               if (!current || effort.elapsed_time < current.time) {
+                console.log(`[Sync] Novo melhor tempo para ${distance}: ${effort.elapsed_time}s`)
                 bestEfforts.set(distance, {
                   time: effort.elapsed_time,
                   date: effort.start_date,
@@ -93,9 +101,9 @@ export async function syncUserRecords(
             }
           }
         }
-      } catch {
+      } catch (err) {
         // Ignorar erros em atividades individuais
-        console.warn(`Erro ao buscar detalhes da atividade ${run.id}`)
+        console.warn(`Erro ao buscar detalhes da atividade ${run.id}:`, err)
       }
     }
 
@@ -105,7 +113,7 @@ export async function syncUserRecords(
 
     for (const [distance, data] of bestEfforts) {
       recordsToSave.push({
-        user_id: userId,
+        strava_id: stravaId,
         distance_type: distance,
         time_seconds: data.time,
         achieved_at: data.date,
@@ -124,7 +132,7 @@ export async function syncUserRecords(
       // Upsert: atualizar se existir, criar se não
       for (const record of recordsToSave) {
         await supabase.from("records").upsert(record as never, {
-          onConflict: "user_id,distance_type",
+          onConflict: "strava_id,distance_type",
         })
       }
     }

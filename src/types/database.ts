@@ -1,5 +1,6 @@
 // Tipos gerados a partir do schema do banco de dados
 // Issue #2: Modelagem do Banco de Dados
+// NOTA: Usamos strava_id como chave primária (NextAuth, não Supabase Auth)
 
 export type Gender = 'M' | 'F' | null
 
@@ -9,8 +10,7 @@ export type DistanceType = '5k' | '10k' | '21k'
 // PROFILES
 // ============================================
 export interface Profile {
-  id: string // UUID
-  strava_id: number | null
+  strava_id: number // Chave primária
   username: string | null
   full_name: string | null
   avatar_url: string | null
@@ -24,8 +24,7 @@ export interface Profile {
 }
 
 export interface ProfileInsert {
-  id?: string // Opcional quando usando strava_id como chave
-  strava_id: number // Obrigatório - usado como identificador único do Strava
+  strava_id: number // Chave primária - obrigatório
   username?: string | null
   full_name?: string | null
   avatar_url?: string | null
@@ -37,7 +36,6 @@ export interface ProfileInsert {
 }
 
 export interface ProfileUpdate {
-  strava_id?: number | null
   username?: string | null
   full_name?: string | null
   avatar_url?: string | null
@@ -53,7 +51,7 @@ export interface ProfileUpdate {
 // ============================================
 export interface Record {
   id: string // UUID
-  user_id: string // UUID
+  strava_id: number // FK para profiles.strava_id
   distance_type: DistanceType
   time_seconds: number
   achieved_at: string | null // Date string
@@ -63,7 +61,7 @@ export interface Record {
 }
 
 export interface RecordInsert {
-  user_id: string
+  strava_id: number // FK para profiles.strava_id
   distance_type: DistanceType
   time_seconds: number
   achieved_at?: string | null
@@ -81,7 +79,7 @@ export interface RecordUpdate {
 // ============================================
 export interface RankingHistory {
   id: string // UUID
-  user_id: string // UUID
+  strava_id: number // FK para profiles.strava_id
   distance_type: DistanceType
   gender_filter: Gender
   started_at: string // ISO timestamp
@@ -95,7 +93,7 @@ export interface RankingHistory {
 // ============================================
 export interface CurrentRanking {
   id: string
-  user_id: string
+  strava_id: number
   distance_type: DistanceType
   time_seconds: number
   achieved_at: string | null
@@ -108,7 +106,7 @@ export interface CurrentRanking {
 
 export interface CurrentLeader {
   id: string
-  user_id: string
+  strava_id: number
   distance_type: DistanceType
   gender_filter: Gender
   started_at: string
