@@ -172,3 +172,41 @@ export const STRAVA_EFFORT_NAMES = {
   "10k": "10K",
   "21k": "Half-Marathon",
 } as const
+
+/**
+ * Resposta do refresh token do Strava
+ */
+export interface StravaTokenResponse {
+  access_token: string
+  refresh_token: string
+  expires_at: number
+  expires_in: number
+  token_type: string
+}
+
+/**
+ * Renova o access token usando o refresh token
+ */
+export async function refreshStravaToken(
+  refreshToken: string
+): Promise<StravaTokenResponse> {
+  const response = await fetch("https://www.strava.com/oauth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      client_id: process.env.STRAVA_CLIENT_ID,
+      client_secret: process.env.STRAVA_CLIENT_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Erro ao renovar token: ${response.status} - ${error}`)
+  }
+
+  return response.json()
+}
