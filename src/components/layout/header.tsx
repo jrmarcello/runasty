@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { UserMenu } from "./user-menu"
 import { useRouter } from "next/navigation"
 import { Logo } from "@/components/ui/logo"
@@ -18,6 +18,17 @@ export function Header({ user }: HeaderProps) {
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const router = useRouter()
+
+  // Escutar evento de atualização do ranking (disparado pelo auto-sync do primeiro login)
+  useEffect(() => {
+    const handleRankingUpdated = () => {
+      console.log("📊 Ranking atualizado - recarregando dados...")
+      router.refresh()
+    }
+
+    window.addEventListener("rankingUpdated", handleRankingUpdated)
+    return () => window.removeEventListener("rankingUpdated", handleRankingUpdated)
+  }, [router])
 
   const handleSync = useCallback(async () => {
     setIsSyncing(true)
