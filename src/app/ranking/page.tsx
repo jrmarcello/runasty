@@ -42,12 +42,13 @@ interface PageProps {
 async function getCurrentLeader(distance: DistanceType) {
   const supabase = await createClient()
 
-  const { data } = await supabase
+  // Primeiro tenta buscar do ranking_history
+  const { data: historyData } = await supabase
     .from("ranking_history")
     .select(`
       strava_id,
       started_at,
-      profiles!inner (
+      profiles (
         full_name,
         username
       )
@@ -57,24 +58,61 @@ async function getCurrentLeader(distance: DistanceType) {
     .limit(1)
     .single()
 
-  if (!data) return null
+  if (historyData) {
+    type LeaderData = {
+      strava_id: number
+      started_at: string
+      profiles: {
+        full_name: string | null
+        username: string | null
+      }
+    }
 
-  type LeaderData = {
-    strava_id: number
-    started_at: string
-    profiles: {
-      full_name: string | null
-      username: string | null
+    const leader = historyData as unknown as LeaderData
+
+    return {
+      stravaId: leader.strava_id,
+      startedAt: leader.started_at,
+      name: leader.profiles.full_name || leader.profiles.username || "Atleta",
     }
   }
 
-  const leader = data as unknown as LeaderData
+  // Fallback: buscar o primeiro lugar dos records
+  const { data: recordData } = await supabase
+    .from("records")
+    .select(`
+      strava_id,
+      achieved_at,
+      profiles (
+        full_name,
+        username
+      )
+    `)
+    .eq("distance_type", distance)
+    .order("time_seconds", { ascending: true })
+    .limit(1)
+    .single()
 
-  return {
-    stravaId: leader.strava_id,
-    startedAt: leader.started_at,
-    name: leader.profiles.full_name || leader.profiles.username || "Atleta",
+  if (recordData) {
+    type RecordData = {
+      strava_id: number
+      achieved_at: string | null
+      profiles: {
+        full_name: string | null
+        username: string | null
+      }
+    }
+
+    const record = recordData as unknown as RecordData
+
+    return {
+      stravaId: record.strava_id,
+      startedAt: record.achieved_at || new Date().toISOString(),
+      name: record.profiles.full_name || record.profiles.username || "Atleta",
+    }
   }
+
+  return null
 }
 
 async function RankingTable({
