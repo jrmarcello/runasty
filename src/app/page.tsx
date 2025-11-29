@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SyncButton } from "@/components/strava/sync-button"
@@ -55,7 +56,14 @@ export default async function Home() {
             <span className="text-orange-500">Run</span>asty
           </h1>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            <nav className="flex items-center gap-4">
+              <span className="text-orange-400 font-medium">Dashboard</span>
+              <Link href="/ranking" className="text-gray-400 hover:text-white transition-colors">
+                Ranking
+              </Link>
+            </nav>
+            
             <div className="flex items-center gap-3">
               {user.image && (
                 <Image
