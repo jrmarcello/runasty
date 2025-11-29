@@ -168,7 +168,7 @@ export const TARGET_DISTANCES = {
  * Nomes dos best efforts no Strava para as distâncias
  */
 export const STRAVA_EFFORT_NAMES = {
-  "5k": "5k",
-  "10k": "10k",
+  "5k": "5K",
+  "10k": "10K",
   "21k": "Half-Marathon",
 } as const

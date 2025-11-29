@@ -14,8 +14,8 @@ DROP VIEW IF EXISTS public.current_rankings;
 DROP TABLE IF EXISTS public.ranking_history CASCADE;
 DROP TABLE IF EXISTS public.records CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
-DROP FUNCTION IF EXISTS public.handle_updated_at();
-DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.handle_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
 -- ============================================
 -- TABELA: profiles

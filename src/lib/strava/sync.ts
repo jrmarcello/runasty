@@ -58,15 +58,11 @@ export async function syncUserRecords(
 
     // Buscar atividades recentes (últimas 100)
     const activities = await getActivities(accessToken, 1, 100)
-    
-    console.log(`[Sync] Encontradas ${activities.length} atividades`)
 
     // Filtrar apenas corridas
     const runs = activities.filter(
       (a) => a.type === "Run" || a.sport_type === "Run"
     )
-    
-    console.log(`[Sync] ${runs.length} são corridas`)
 
     // Mapa para guardar os melhores tempos encontrados
     const bestEfforts: Map<
@@ -79,8 +75,6 @@ export async function syncUserRecords(
       // Limitar a 20 para não estourar rate limit
       try {
         const details = await getActivityDetails(accessToken, run.id)
-        
-        console.log(`[Sync] Atividade ${run.id}: ${details.best_efforts?.length || 0} best efforts`)
 
         if (details.best_efforts) {
           for (const effort of details.best_efforts) {
@@ -91,7 +85,6 @@ export async function syncUserRecords(
             if (distance) {
               const current = bestEfforts.get(distance)
               if (!current || effort.elapsed_time < current.time) {
-                console.log(`[Sync] Novo melhor tempo para ${distance}: ${effort.elapsed_time}s`)
                 bestEfforts.set(distance, {
                   time: effort.elapsed_time,
                   date: effort.start_date,
