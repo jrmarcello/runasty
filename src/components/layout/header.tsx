@@ -13,22 +13,6 @@ interface HeaderProps {
   }
 }
 
-// Formata tempo relativo
-function formatTimeAgo(date: Date | null): string {
-  if (!date) return ""
-  
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSecs = Math.floor(diffMs / 1000)
-  const diffMins = Math.floor(diffSecs / 60)
-  const diffHours = Math.floor(diffMins / 60)
-  
-  if (diffSecs < 60) return "agora"
-  if (diffMins < 60) return `${diffMins}min atrás`
-  if (diffHours < 24) return `${diffHours}h atrás`
-  return `${Math.floor(diffHours / 24)}d atrás`
-}
-
 export function Header({ user }: HeaderProps) {
   const { isSyncing: isAutoSyncing, manualSync, lastSyncAt } = useSyncContext()
   const [isSyncing, setIsSyncing] = useState(false)
@@ -79,26 +63,7 @@ export function Header({ user }: HeaderProps) {
           <Logo size="sm" showText />
 
           <div className="flex items-center gap-3">
-            {/* Indicador de última sincronização */}
-            {lastSyncAt && !isSyncing && !isAutoSyncing && (
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <span>{formatTimeAgo(lastSyncAt)}</span>
-              </div>
-            )}
-            
-            {/* Indicador de sincronização em andamento */}
-            {(isSyncing || isAutoSyncing) && (
-              <div className="flex items-center gap-1.5 text-xs text-orange-500">
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span className="hidden sm:inline">Sincronizando...</span>
-              </div>
-            )}
-
-            <UserMenu user={user} onSync={handleSync} isSyncing={isSyncing || isAutoSyncing} />
+            <UserMenu user={user} onSync={handleSync} isSyncing={isSyncing || isAutoSyncing} lastSyncAt={lastSyncAt} />
           </div>
         </div>
       </header>

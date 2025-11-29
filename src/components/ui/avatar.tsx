@@ -36,7 +36,8 @@ export function Avatar({ src, name, size = 40, className = "" }: AvatarProps) {
       alt={name || "Avatar"}
       width={size}
       height={size}
-      className={`rounded-full inline-block ${className}`}
+      className={`rounded-full inline-block object-cover aspect-square shrink-0 ${className}`}
+      style={{ width: size, height: size }}
       onError={() => setHasError(true)}
     />
   )

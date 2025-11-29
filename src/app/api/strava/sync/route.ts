@@ -37,11 +37,13 @@ export async function POST(request: NextRequest) {
     // Ler opções do body (opcional)
     let isAutoSync = false
     let force = false
+    let fullSync = false
     
     try {
       const body = await request.json()
       isAutoSync = body?.isAutoSync === true
       force = body?.force === true
+      fullSync = body?.fullSync === true
     } catch {
       // Body vazio ou inválido - usar valores padrão
     }
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await syncUserRecords(stravaId, accessToken, { isAutoSync, force })
+    const result = await syncUserRecords(stravaId, accessToken, { isAutoSync, force, fullSync })
 
     // Se foi pulado por cooldown, retornar 200 com skipped
     if (result.skipped) {

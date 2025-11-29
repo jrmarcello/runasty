@@ -6,6 +6,28 @@ import { signOut } from "next-auth/react"
 import { ThemeDropdown } from "@/components/ui/theme-toggle"
 import { Trash2, AlertTriangle, X } from "lucide-react"
 
+// Formata tempo relativo
+function formatTimeAgo(date: Date | null): string {
+  if (!date) return ""
+  
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffSecs = Math.floor(diffMs / 1000)
+  const diffMins = Math.floor(diffSecs / 60)
+  const diffHours = Math.floor(diffMins / 60)
+  
+  if (diffSecs < 60) return "agora"
+  if (diffMins < 60) return `há ${diffMins}min`
+  if (diffHours < 24) return `há ${diffHours}h`
+  return `há ${Math.floor(diffHours / 24)}d`
+}
+
+interface UserLevel {
+  level: string
+  emoji: string
+  description: string
+}
+
 interface UserMenuProps {
   user: {
     name?: string | null
@@ -13,13 +35,15 @@ interface UserMenuProps {
   }
   onSync: () => void
   isSyncing: boolean
+  lastSyncAt?: Date | null
 }
 
-export function UserMenu({ user, onSync, isSyncing }: UserMenuProps) {
+export function UserMenu({ user, onSync, isSyncing, lastSyncAt }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [userLevel, setUserLevel] = useState<UserLevel | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Fechar menu ao clicar fora
@@ -33,6 +57,25 @@ export function UserMenu({ user, onSync, isSyncing }: UserMenuProps) {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Buscar nível do usuário (e rebuscar após sync)
+  useEffect(() => {
+    // Não buscar durante sync
+    if (isSyncing) return
+
+    async function fetchLevel() {
+      try {
+        const response = await fetch("/api/profile/level")
+        if (response.ok) {
+          const data = await response.json()
+          setUserLevel(data)
+        }
+      } catch {
+        // Silently fail
+      }
+    }
+    fetchLevel()
+  }, [isSyncing]) // Rebusca quando sync termina
 
   const initial = user.name?.charAt(0)?.toUpperCase() || "?"
 
@@ -72,14 +115,15 @@ export function UserMenu({ user, onSync, isSyncing }: UserMenuProps) {
               alt={user.name || "Avatar"}
               width={36}
               height={36}
-              className="rounded-full"
+              className="rounded-full object-cover aspect-square"
+              style={{ width: 36, height: 36 }}
             />
           ) : (
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
               {initial}
             </div>
           )}
-          {/* Indicador de sincronização */}
+          {/* Indicador de sincronização no avatar */}
           {isSyncing && (
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
               <svg
@@ -104,7 +148,23 @@ export function UserMenu({ user, onSync, isSyncing }: UserMenuProps) {
             </div>
           )}
         </div>
-        <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">{user.name?.split(" ")[0]}</span>
+        {/* Nome e nível do usuário */}
+        <div className="hidden sm:flex flex-col items-start">
+          <span className="text-sm text-gray-600 dark:text-gray-300">{user.name?.split(" ")[0]}</span>
+          {isSyncing ? (
+            <span className="text-[10px] text-orange-500 font-medium flex items-center gap-1">
+              <svg className="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Sincronizando...
+            </span>
+          ) : userLevel ? (
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+              {userLevel.emoji} {userLevel.level}
+            </span>
+          ) : null}
+        </div>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none"
@@ -119,6 +179,24 @@ export function UserMenu({ user, onSync, isSyncing }: UserMenuProps) {
         <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
             <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+            {/* Badge de última sincronização */}
+            {lastSyncAt && !isSyncing && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                  Sincronizado {formatTimeAgo(lastSyncAt)}
+                </span>
+              </div>
+            )}
+            {isSyncing && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <svg className="w-3 h-3 text-orange-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-xs text-orange-500 font-medium">Sincronizando...</span>
+              </div>
+            )}
           </div>
 
           {/* Sincronizar */}

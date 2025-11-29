@@ -6,6 +6,7 @@
  * - Webhook recebe eventos do Strava e dispara sync automático
  * - Sync manual disponível via botão "Forçar Sincronização"
  * - Cooldown de 5 minutos para evitar spam de requests
+ * - Primeiro login: busca histórico completo com paginação otimizada
  */
 
 import { createClient } from "@/lib/supabase/server"
@@ -39,6 +40,8 @@ interface SyncOptions {
   isAutoSync?: boolean
   /** Se true, força sync ignorando cooldown */
   force?: boolean
+  /** Se true, busca atividades de 1 ano (sync completo inicial) */
+  fullSync?: boolean
 }
 
 /**
@@ -50,7 +53,7 @@ export async function syncUserRecords(
   accessToken: string,
   options: SyncOptions = {}
 ): Promise<SyncResult> {
-  const { isAutoSync = false, force = false } = options
+  const { isAutoSync = false, force = false, fullSync = false } = options
   let apiCalls = 0
 
   try {
@@ -85,28 +88,46 @@ export async function syncUserRecords(
       }
     }
 
-    // OTIMIZAÇÃO 1: Sync incremental - só buscar atividades desde última sync
-    // Se nunca sincronizou, buscar últimos 30 dias
-    const afterTimestamp = lastSyncDate 
-      ? Math.floor(lastSyncDate.getTime() / 1000)
-      : Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000)
+    // Detectar se é primeiro sync (usuário nunca sincronizou)
+    const isFirstSync = !lastSyncDate
 
-    // Buscar atividades desde a última sync (máximo 50 por página)
-    const activities = await getActivitiesAfter(accessToken, afterTimestamp, 50)
-    apiCalls++
+    // Buscar atividades
+    let runsWithPotentialPRs: StravaActivity[]
 
-    // Filtrar apenas corridas
-    const runs = activities.filter(
-      (a: StravaActivity) => a.type === "Run" || a.sport_type === "Run"
-    )
+    if (isFirstSync) {
+      // PRIMEIRO SYNC: Buscar últimos 90 dias para pegar PRs recentes
+      console.log("🚀 Primeiro sync - buscando últimos 90 dias...")
+      const ninetyDaysAgo = Math.floor((Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000)
+      const activities = await getActivitiesAfter(accessToken, ninetyDaysAgo, 100)
+      apiCalls++
+      
+      // Filtrar corridas com potencial de PR
+      runsWithPotentialPRs = activities.filter(
+        (a: StravaActivity) => 
+          (a.type === "Run" || a.sport_type === "Run") &&
+          (a.achievement_count > 0 || a.pr_count > 0 || a.distance >= 5000)
+      )
+      console.log(`📊 Encontradas ${runsWithPotentialPRs.length} corridas com potencial de PR`)
+    } else {
+      // SYNC INCREMENTAL: Buscar apenas desde última sync
+      const afterTimestamp = fullSync
+        ? Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000) // 1 ano
+        : Math.floor(lastSyncDate.getTime() / 1000)
 
-    // OTIMIZAÇÃO 2: Só buscar detalhes de corridas que podem ter PRs
-    // Atividades com achievement_count > 0 ou pr_count > 0 têm mais chance de ter best_efforts
-    const runsWithPotentialPRs = runs.filter(
-      (run: StravaActivity) => run.achievement_count > 0 || run.pr_count > 0 || 
-               // Também incluir corridas longas que podem ter best efforts
-               run.distance >= 5000
-    )
+      const activities = await getActivitiesAfter(accessToken, afterTimestamp, 50)
+      apiCalls++
+
+      // Filtrar apenas corridas com potencial de PR
+      runsWithPotentialPRs = activities.filter(
+        (a: StravaActivity) => 
+          (a.type === "Run" || a.sport_type === "Run") &&
+          (a.achievement_count > 0 || a.pr_count > 0 || a.distance >= 5000)
+      )
+    }
+
+    // Ordenar por pr_count (corridas com mais PRs primeiro)
+    // Isso garante que pegamos os melhores tempos mesmo com limite de chamadas
+    runsWithPotentialPRs.sort((a, b) => (b.pr_count || 0) - (a.pr_count || 0))
 
     // Mapa para guardar os melhores tempos encontrados
     const bestEfforts: Map<
@@ -127,44 +148,46 @@ export async function syncUserRecords(
       }
     }
 
-    // OTIMIZAÇÃO 3: Limitar chamadas baseado no tipo de sync
-    const maxDetailCalls = isAutoSync ? 5 : 10
+    // OTIMIZAÇÃO 3: Limitar chamadas de detalhes baseado no tipo de sync
+    // Rate limit do Strava: 100 requests/15min, 1000/dia
+    // Primeiro sync: até 15 chamadas (pegar os PRs mais recentes)
+    // Auto sync (webhook): limitar a 3 chamadas
+    // Manual sync: limitar a 10 chamadas
+    const maxDetailCalls = isFirstSync ? 15 : (isAutoSync ? 3 : 10)
     let detailCallsMade = 0
 
     // Para cada corrida com potencial de PR, buscar os best_efforts
     for (const run of runsWithPotentialPRs) {
       if (detailCallsMade >= maxDetailCalls) break
 
-      try {
-        const details = await getActivityDetails(accessToken, run.id)
-        apiCalls++
-        detailCallsMade++
+      const details = await getActivityDetails(accessToken, run.id)
+      apiCalls++
+      detailCallsMade++
 
-        if (details.best_efforts) {
-          for (const effort of details.best_efforts) {
-            const distance = mapEffortToDistance(effort.name)
+      // Se rate limit ou erro, pular essa atividade
+      if (!details) continue
+
+      if (details.best_efforts) {
+        for (const effort of details.best_efforts) {
+          const distance = mapEffortToDistance(effort.name)
+          
+          if (distance) {
+            const currentTime = currentTimes.get(distance)
+            const currentBest = bestEfforts.get(distance)
             
-            if (distance) {
-              const currentTime = currentTimes.get(distance)
-              const currentBest = bestEfforts.get(distance)
-              
-              // Só considerar se for melhor que o tempo atual ou o melhor desta sync
-              const isBetterThanDB = !currentTime || effort.elapsed_time < currentTime
-              const isBetterThanCurrent = !currentBest || effort.elapsed_time < currentBest.time
+            // Só considerar se for melhor que o tempo atual ou o melhor desta sync
+            const isBetterThanDB = !currentTime || effort.elapsed_time < currentTime
+            const isBetterThanCurrent = !currentBest || effort.elapsed_time < currentBest.time
 
-              if (isBetterThanDB && isBetterThanCurrent) {
-                bestEfforts.set(distance, {
-                  time: effort.elapsed_time,
-                  date: effort.start_date,
-                  activityId: run.id,
-                })
-              }
+            if (isBetterThanDB && isBetterThanCurrent) {
+              bestEfforts.set(distance, {
+                time: effort.elapsed_time,
+                date: effort.start_date,
+                activityId: run.id,
+              })
             }
           }
         }
-      } catch (err) {
-        // Ignorar erros em atividades individuais
-        console.warn(`Erro ao buscar detalhes da atividade ${run.id}:`, err)
       }
     }
 
@@ -217,7 +240,7 @@ export async function syncUserRecords(
     const newRecordsCount = savedRecords.length
     
     let message = ""
-    if (activities.length === 0) {
+    if (runsWithPotentialPRs.length === 0) {
       message = "Nenhuma atividade nova desde a última sincronização."
     } else if (newRecordsCount === 0) {
       message = `${activitiesChecked} corridas analisadas, nenhum novo recorde.`

@@ -246,7 +246,7 @@ function PodiumCard({
   const heights = {
     1: "h-40",
     2: "h-32",
-    3: "h-28",
+    3: "h-32",
   }
 
   const widths = {
@@ -307,14 +307,18 @@ function PodiumCard({
         </div>
 
         {/* Nome - maior destaque */}
-        <p
-          className={`text-sm font-bold truncate w-full text-center px-2 ${
-            isCurrentUser ? "text-orange-200" : "text-white"
-          }`}
-        >
-          {entry.full_name?.split(" ")[0] || "Atleta"}
-          {isCurrentUser && <span className="text-[10px] opacity-70"> (você)</span>}
-        </p>
+        <div className="text-center px-2 w-full leading-tight">
+          <p
+            className={`text-sm font-bold truncate ${
+              isCurrentUser ? "text-white" : "text-white"
+            }`}
+          >
+            {entry.full_name?.split(" ")[0] || "Atleta"}
+          </p>
+          {isCurrentUser && (
+            <span className="text-[10px] text-white/70 font-medium -mt-0.5 block">(você)</span>
+          )}
+        </div>
 
         {/* Tags de tempo */}
         <div className="flex flex-col gap-1 mt-auto">

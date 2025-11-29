@@ -147,6 +147,8 @@ export async function getActivitiesAfter(
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      // Timeout de 10 segundos para evitar hanging
+      signal: AbortSignal.timeout(10000),
     }
   )
 
@@ -159,27 +161,97 @@ export async function getActivitiesAfter(
 }
 
 /**
+ * Busca TODAS as atividades do atleta com paginação
+ * Usado no primeiro sync para pegar histórico completo
+ * Retorna apenas corridas com potencial de PR (achievement_count > 0 ou pr_count > 0)
+ */
+export async function getAllRunsWithPRs(
+  accessToken: string,
+  maxPages = 3 // Limita a 3 páginas (300 atividades) para evitar rate limit
+): Promise<StravaActivity[]> {
+  const allRuns: StravaActivity[] = []
+  
+  for (let page = 1; page <= maxPages; page++) {
+    try {
+      const response = await fetch(
+        `${STRAVA_API_BASE}/athlete/activities?page=${page}&per_page=100`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          // Timeout de 8 segundos por página
+          signal: AbortSignal.timeout(8000),
+        }
+      )
+
+      if (!response.ok) {
+        console.error(`Erro na página ${page}:`, response.status)
+        break
+      }
+
+      const activities: StravaActivity[] = await response.json()
+      
+      // Se não há mais atividades, parar
+      if (activities.length === 0) {
+        break
+      }
+
+      // Filtrar apenas corridas com potencial de PR
+      const runsWithPRs = activities.filter(
+        (a) => 
+          (a.type === "Run" || a.sport_type === "Run") &&
+          (a.achievement_count > 0 || a.pr_count > 0 || a.distance >= 5000)
+      )
+
+      allRuns.push(...runsWithPRs)
+      
+      // Se página não está cheia, não há mais atividades
+      if (activities.length < 100) {
+        break
+      }
+    } catch (error) {
+      console.error(`Timeout ou erro na página ${page}:`, error)
+      break
+    }
+  }
+
+  return allRuns
+}
+
+/**
  * Busca detalhes de uma atividade específica (inclui best_efforts)
+ * Retorna null se rate limit ou erro (não quebra o sync)
  */
 export async function getActivityDetails(
   accessToken: string,
   activityId: number
-): Promise<StravaActivity & { best_efforts: StravaBestEffort[] }> {
-  const response = await fetch(
-    `${STRAVA_API_BASE}/activities/${activityId}?include_all_efforts=true`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+): Promise<(StravaActivity & { best_efforts: StravaBestEffort[] }) | null> {
+  try {
+    const response = await fetch(
+      `${STRAVA_API_BASE}/activities/${activityId}?include_all_efforts=true`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        signal: AbortSignal.timeout(5000), // 5 segundos timeout
+      }
+    )
+
+    if (response.status === 429) {
+      console.warn(`⚠️ Rate limit atingido, pulando atividade ${activityId}`)
+      return null
     }
-  )
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Erro ao buscar atividade: ${response.status} - ${error}`)
+    if (!response.ok) {
+      console.warn(`⚠️ Erro ${response.status} na atividade ${activityId}`)
+      return null
+    }
+
+    return response.json()
+  } catch (error) {
+    console.warn(`⚠️ Timeout/erro na atividade ${activityId}:`, error)
+    return null
   }
-
-  return response.json()
 }
 
 /**
