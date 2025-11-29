@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import Strava from "next-auth/providers/strava"
 import type { Profile } from "next-auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { ProfileInsert } from "@/types/database"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -42,7 +42,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (!account || !profile) return false
 
       try {
-        const supabase = await createClient()
+        const supabase = createAdminClient()
         const stravaProfile = profile as Profile
         
         // O ID do Strava vem como número no perfil original
