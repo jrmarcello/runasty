@@ -1,6 +1,7 @@
 /**
  * Página de Ranking
  * Issue #9: Ranking com filtros por distância e gênero
+ * Issue #10: Componente Visual "Tempo na Liderança"
  */
 
 import { Suspense } from "react"
@@ -9,6 +10,7 @@ import Image from "next/image"
 import { auth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import type { DistanceType, Gender } from "@/types/database"
+import { LeaderTime } from "@/components/ranking/leader-time"
 
 // Formata segundos para mm:ss ou hh:mm:ss
 function formatTime(seconds: number): string {
@@ -34,6 +36,45 @@ interface RankingEntry {
 
 interface PageProps {
   searchParams: Promise<{ distance?: string; gender?: string }>
+}
+
+// Busca o líder atual para uma distância
+async function getCurrentLeader(distance: DistanceType) {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from("ranking_history")
+    .select(`
+      strava_id,
+      started_at,
+      profiles!inner (
+        full_name,
+        username
+      )
+    `)
+    .eq("distance_type", distance)
+    .is("ended_at", null)
+    .limit(1)
+    .single()
+
+  if (!data) return null
+
+  type LeaderData = {
+    strava_id: number
+    started_at: string
+    profiles: {
+      full_name: string | null
+      username: string | null
+    }
+  }
+
+  const leader = data as unknown as LeaderData
+
+  return {
+    stravaId: leader.strava_id,
+    startedAt: leader.started_at,
+    name: leader.profiles.full_name || leader.profiles.username || "Atleta",
+  }
 }
 
 async function RankingTable({
@@ -204,6 +245,9 @@ export default async function RankingPage({ searchParams }: PageProps) {
   
   const distance = (params.distance as DistanceType) || "5k"
   const gender = params.gender || "all"
+  
+  // Buscar líder atual
+  const leader = await getCurrentLeader(distance)
 
   const distances: { key: DistanceType; label: string }[] = [
     { key: "5k", label: "5K" },
@@ -244,8 +288,19 @@ export default async function RankingPage({ searchParams }: PageProps) {
           <p className="text-gray-400">Veja quem são os reis da montanha</p>
         </div>
 
+        {/* Tempo na Liderança - Issue #10 */}
+        {leader && (
+          <div className="mb-8">
+            <LeaderTime
+              startedAt={leader.startedAt}
+              leaderName={leader.name}
+            />
+          </div>
+        )}
+
         {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+
           {/* Filtro de Distância */}
           <div className="flex bg-gray-800 rounded-lg p-1">
             {distances.map((d) => (

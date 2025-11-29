@@ -37,9 +37,10 @@ export default async function Home() {
     .eq("strava_id", user.stravaId)
 
   // Criar mapa de records por distância
+  type RecordRow = { distance_type: string; time_seconds: number; achieved_at: string | null }
   const recordsMap = new Map<DistanceType, { time: number; date: string | null }>()
   if (records) {
-    for (const record of records) {
+    for (const record of records as RecordRow[]) {
       recordsMap.set(record.distance_type as DistanceType, {
         time: record.time_seconds,
         date: record.achieved_at,
