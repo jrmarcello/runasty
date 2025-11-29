@@ -96,10 +96,10 @@ export async function syncUserRecords(
     let runsWithPotentialPRs: StravaActivity[]
 
     if (isFirstSync) {
-      // PRIMEIRO SYNC: Buscar últimos 90 dias para pegar PRs recentes
-      console.log("🚀 Primeiro sync - buscando últimos 90 dias...")
-      const ninetyDaysAgo = Math.floor((Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000)
-      const activities = await getActivitiesAfter(accessToken, ninetyDaysAgo, 100)
+      // PRIMEIRO SYNC: Buscar últimos 6 meses para pegar PRs recentes
+      console.log("🚀 Primeiro sync - buscando últimos 6 meses...")
+      const sixMonthsAgo = Math.floor((Date.now() - 180 * 24 * 60 * 60 * 1000) / 1000)
+      const activities = await getActivitiesAfter(accessToken, sixMonthsAgo, 100)
       apiCalls++
       
       // Filtrar corridas com potencial de PR

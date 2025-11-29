@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import type { Profile } from "@/types/database"
 
@@ -54,7 +55,8 @@ export async function DELETE() {
   const stravaId = session.user.stravaId
 
   try {
-    const supabase = await createClient()
+    // Usar admin client para bypasser RLS (NextAuth não autentica no Supabase)
+    const supabase = createAdminClient()
 
     // 1. Deletar records do usuário
     const { error: recordsError } = await supabase
