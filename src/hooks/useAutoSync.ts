@@ -4,12 +4,12 @@
  * Estratégia simplificada (com webhook ativo):
  * - Webhook do Strava faz sync automático quando atividade é criada
  * - Usuário pode forçar sync manual quando necessário
- * - Sem sync automático no frontend (desnecessário com webhook)
+ * - Busca última sincronização do banco para mostrar badge verde
  */
 
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 
 interface SyncState {
@@ -25,6 +25,30 @@ export function useAutoSync() {
     lastSyncMessage: null,
     lastSyncAt: null,
   })
+
+  // Buscar última sincronização do banco ao montar
+  useEffect(() => {
+    if (status !== "authenticated") return
+
+    async function fetchLastSync() {
+      try {
+        const response = await fetch("/api/profile")
+        if (response.ok) {
+          const data = await response.json()
+          if (data.last_sync_at) {
+            setState(prev => ({
+              ...prev,
+              lastSyncAt: new Date(data.last_sync_at),
+            }))
+          }
+        }
+      } catch {
+        // Silently fail - não é crítico
+      }
+    }
+
+    fetchLastSync()
+  }, [status])
 
   // Sync manual (força busca de novos dados)
   const manualSync = useCallback(async () => {
