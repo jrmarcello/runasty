@@ -1,54 +1,44 @@
 # 🏃‍♂️ Runasty
 
-Ranking competitivo de recordes pessoais no Strava com sistema de "Rei da Montanha".
+Ranking competitivo de corrida integrado com Strava.
 
-## ✨ Funcionalidades
+## Stack
 
-- 🔐 Login via Strava OAuth
-- 📊 Ranking de RPs (5k, 10k, 21k)
-- 👑 Sistema "Rei da Montanha" com contador de tempo na liderança
-- 🎯 Filtros por gênero (Geral, Masculino, Feminino)
-- 🔄 Sincronização inteligente com rate limiting
-- 📱 PWA instalável (funciona offline)
-- 🌙 Tema claro/escuro
-- 🔔 Webhook para sync automático
+Next.js 16 • React 19 • Supabase • NextAuth v5 • Tailwind v4 • Vercel
 
-## 🛠️ Tech Stack
+## Features
 
-- **Frontend:** Next.js 16 (App Router) + React 19
-- **Backend:** Supabase (PostgreSQL + RLS)
-- **Auth:** NextAuth.js v5 + Strava OAuth
-- **Styling:** Tailwind CSS v4
-- **Monitoramento:** Sentry (opcional)
-- **Deploy:** Vercel
+- 🔐 OAuth Strava
+- 👑 Ranking 5K/10K/21K com "Rei da Montanha"
+- 🔄 Webhook sync automático
+- 📱 PWA offline-first
+- 🌙 Dark mode
 
-## 🚀 Setup
-
-1. Clone o repositório
-2. Copie `.env.example` para `.env.local`
-3. Configure as variáveis de ambiente
-4. `npm install && npm run dev`
-
-### Configurar Webhook do Strava (opcional)
-
-Para receber atualizações automáticas quando você corre:
+## Setup
 
 ```bash
-# Gerar token de verificação
-openssl rand -hex 32
-
-# Registrar webhook no Strava
-curl -X POST https://www.strava.com/api/v3/push_subscriptions \
-  -F client_id=SEU_CLIENT_ID \
-  -F client_secret=SEU_CLIENT_SECRET \
-  -F callback_url=https://runasty.vercel.app/api/strava/webhook \
-  -F verify_token=SEU_VERIFY_TOKEN
+cp .env.example .env.local  # Configurar variáveis
+npm install && npm run dev
 ```
 
-## 📄 Licença
+## Scripts
 
-MIT - Veja [LICENSE](LICENSE)
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Servidor local |
+| `npm run build` | Build produção |
+| `npx tsx scripts/seed.ts` | Popular banco com dados teste |
 
----
+## Webhook Strava
 
-Feito com ❤️ e 🏃
+```bash
+curl -X POST https://www.strava.com/api/v3/push_subscriptions \
+  -F client_id=$STRAVA_CLIENT_ID \
+  -F client_secret=$STRAVA_CLIENT_SECRET \
+  -F callback_url=https://runasty.vercel.app/api/strava/webhook \
+  -F verify_token=$STRAVA_WEBHOOK_VERIFY_TOKEN
+```
+
+## Licença
+
+MIT
