@@ -1,12 +1,24 @@
 "use client"
 
 import { useState } from "react"
-import { Activity, Crown, Timer } from "lucide-react"
+import { Crown, Timer } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
 import type { DistanceType, Gender } from "@/types/database"
 
 // Formata segundos para mm:ss ou hh:mm:ss
 function formatTime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
+  return `${minutes}:${secs.toString().padStart(2, "0")}`
+}
+
+// Formata tempo compacto para pódio (sem segundos para caber melhor)
+function formatTimeCompact(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = seconds % 60
@@ -284,9 +296,9 @@ function PodiumCard({
   }
 
   const widths = {
-    1: "w-26 sm:w-32",
-    2: "w-22 sm:w-28",
-    3: "w-22 sm:w-28",
+    1: "w-24 sm:w-32",
+    2: "w-20 sm:w-28",
+    3: "w-20 sm:w-28",
   }
 
   const bgColors = {
@@ -295,13 +307,17 @@ function PodiumCard({
     3: "bg-amber-600",
   }
 
-  // Calcula dias de liderança
+  // Calcula dias de liderança (mínimo 1 dia se estiver no pódio)
   const getDaysAsLeader = () => {
-    if (!entry.leadership_started_at) return 0
+    if (!entry.leadership_started_at) {
+      // Se não tem data, assume 1 dia como default para quem está no pódio
+      return 1
+    }
     const start = new Date(entry.leadership_started_at)
     const now = new Date()
     const diff = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-    return diff
+    // Mínimo 1 dia (mesmo que seja o mesmo dia)
+    return Math.max(diff, 1)
   }
 
   const daysAsLeader = getDaysAsLeader()
@@ -346,17 +362,15 @@ function PodiumCard({
         <div className="flex flex-col gap-1 mt-auto">
           {/* RP - Record Pessoal */}
           <div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5">
-            <Activity size={12} className="text-white" />
-            <span className="font-mono text-xs font-semibold text-white">{formatTime(entry.time_seconds)}</span>
+            <Timer size={10} className="text-white shrink-0" />
+            <span className="font-mono text-[11px] font-semibold text-white">{formatTimeCompact(entry.time_seconds)}</span>
           </div>
 
-          {/* Tempo de liderança */}
-          {daysAsLeader > 0 && (
-            <div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5">
-              <Timer size={12} className="text-white" />
-              <span className="text-xs font-semibold text-white">{daysAsLeader}d líder</span>
-            </div>
-          )}
+          {/* Tempo de liderança - usa coroa para economizar espaço */}
+          <div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5">
+            <Crown size={10} className="text-yellow-300 shrink-0" />
+            <span className="text-[11px] font-semibold text-white">{daysAsLeader}d</span>
+          </div>
         </div>
       </div>
     </div>

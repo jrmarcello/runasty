@@ -149,7 +149,11 @@ export function UserMenu({ user, onSync, isSyncing, lastSyncAt }: UserMenuProps)
             </div>
           )}
         </div>
-        {/* Nome e nível do usuário */}
+        {/* Badge de nível - mobile mostra só emoji, desktop mostra completo */}
+        {!isSyncing && userLevel && (
+          <span className="sm:hidden text-sm">{userLevel.emoji}</span>
+        )}
+        {/* Nome e nível do usuário - desktop */}
         <div className="hidden sm:flex flex-col items-start">
           <span className="text-sm text-gray-600 dark:text-gray-300">{user.name?.split(" ")[0]}</span>
           {isSyncing ? (
