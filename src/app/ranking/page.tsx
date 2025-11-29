@@ -6,11 +6,11 @@
 
 import { Suspense } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { auth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import type { DistanceType, Gender } from "@/types/database"
 import { LeaderTime } from "@/components/ranking/leader-time"
+import { Avatar } from "@/components/ui/avatar"
 
 // Formata segundos para mm:ss ou hh:mm:ss
 function formatTime(seconds: number): string {
@@ -190,21 +190,11 @@ async function RankingTable({
                 </td>
                 <td className="py-4">
                   <div className="flex items-center gap-3">
-                    {entry.avatar_url ? (
-                      <Image
-                        src={entry.avatar_url}
-                        alt={entry.full_name || "Avatar"}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                        <span className="text-gray-400 text-sm">
-                          {entry.full_name?.charAt(0) || "?"}
-                        </span>
-                      </div>
-                    )}
+                    <Avatar
+                      src={entry.avatar_url}
+                      name={entry.full_name}
+                      size={40}
+                    />
                     <div>
                       <p className={`font-medium ${isCurrentUser ? "text-orange-400" : "text-white"}`}>
                         {entry.full_name || entry.username || "Atleta"}
