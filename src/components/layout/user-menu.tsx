@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import { signOut } from "next-auth/react"
 import { ThemeDropdown } from "@/components/ui/theme-toggle"
@@ -263,9 +264,9 @@ export function UserMenu({ user, onSync, isSyncing, lastSyncAt }: UserMenuProps)
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      {/* Modal de Confirmação de Exclusão - Renderizado via Portal */}
+      {showDeleteModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
@@ -333,7 +334,8 @@ export function UserMenu({ user, onSync, isSyncing, lastSyncAt }: UserMenuProps)
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
