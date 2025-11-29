@@ -52,13 +52,13 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: baseUrl,
     siteName: "Runasty",
-    title: "Runasty - Ranking de Corrida",
-    description: "Ranking competitivo de corrida integrado com Strava. Compare seus melhores tempos de 5K, 10K e 21K!",
+    title: "Runasty - Ranking Competitivo de Corrida com Strava",
+    description: "Compare seus melhores tempos de 5K, 10K e 21K com outros corredores. Conquiste a coroa e defenda sua dinastia no ranking!",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Runasty - Ranking de Corrida",
-    description: "Conquiste a coroa e defenda sua dinastia! 🏃‍♂️👑",
+    title: "Runasty - Ranking Competitivo de Corrida com Strava",
+    description: "Compare seus tempos de 5K, 10K e 21K. Conquiste a coroa e defenda sua dinastia no ranking!",
   },
 };
 

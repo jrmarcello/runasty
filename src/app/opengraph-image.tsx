@@ -7,7 +7,7 @@
 import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
-export const alt = "Runasty - Ranking de Corrida"
+export const alt = "Runasty - Ranking Competitivo de Corrida com Strava"
 export const size = {
   width: 1200,
   height: 630,
@@ -29,17 +29,34 @@ export default async function Image() {
           backgroundImage: "radial-gradient(circle at 25% 25%, #1f2937 0%, #111827 50%)",
         }}
       >
-        {/* Logo/Emoji */}
+        {/* Logo - Coroa com gradiente laranja */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            width: 140,
+            height: 140,
+            borderRadius: 28,
+            background: "linear-gradient(135deg, #f97316 0%, #dc2626 100%)",
             marginBottom: 40,
+            boxShadow: "0 20px 40px rgba(249, 115, 22, 0.3)",
           }}
         >
-          <span style={{ fontSize: 120 }}>🏃‍♂️</span>
-          <span style={{ fontSize: 100, marginLeft: 20 }}>👑</span>
+          {/* Crown SVG */}
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" />
+            <path d="M5 21h14" />
+          </svg>
         </div>
 
         {/* Title */}
@@ -48,13 +65,11 @@ export default async function Image() {
             display: "flex",
             fontSize: 72,
             fontWeight: 800,
-            background: "linear-gradient(to right, #f97316, #fb923c)",
-            backgroundClip: "text",
-            color: "transparent",
             marginBottom: 20,
           }}
         >
-          Runasty
+          <span style={{ color: "#f97316" }}>Run</span>
+          <span style={{ color: "white" }}>asty</span>
         </div>
 
         {/* Subtitle */}
