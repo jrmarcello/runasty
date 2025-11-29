@@ -97,7 +97,9 @@ export async function syncUserRecords(
 
     if (isFirstSync) {
       // PRIMEIRO SYNC: Buscar últimos 6 meses para pegar PRs recentes
-      console.log("🚀 Primeiro sync - buscando últimos 6 meses...")
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🚀 Primeiro sync - buscando últimos 6 meses...")
+      }
       const sixMonthsAgo = Math.floor((Date.now() - 180 * 24 * 60 * 60 * 1000) / 1000)
       const activities = await getActivitiesAfter(accessToken, sixMonthsAgo, 100)
       apiCalls++
@@ -108,7 +110,9 @@ export async function syncUserRecords(
           (a.type === "Run" || a.sport_type === "Run") &&
           (a.achievement_count > 0 || a.pr_count > 0 || a.distance >= 5000)
       )
-      console.log(`📊 Encontradas ${runsWithPotentialPRs.length} corridas com potencial de PR`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 Encontradas ${runsWithPotentialPRs.length} corridas com potencial de PR`)
+      }
     } else {
       // SYNC INCREMENTAL: Buscar apenas desde última sync
       const afterTimestamp = fullSync

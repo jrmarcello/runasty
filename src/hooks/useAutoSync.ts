@@ -72,7 +72,9 @@ export function useAutoSync() {
 
     async function triggerFirstSync() {
       firstSyncTriggeredRef.current = true
-      console.log("🚀 Primeiro login detectado - iniciando sync completo...")
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🚀 Primeiro login detectado - iniciando sync completo...")
+      }
       
       setState(prev => ({ ...prev, isSyncing: true }))
 
@@ -84,7 +86,9 @@ export function useAutoSync() {
         })
 
         const data = await response.json()
-        console.log("✅ Sync inicial completo:", data.message)
+        if (process.env.NODE_ENV === 'development') {
+          console.log("✅ Sync inicial completo:", data.message)
+        }
 
         setState(prev => ({
           ...prev,
@@ -99,6 +103,7 @@ export function useAutoSync() {
           window.dispatchEvent(new Event('rankingUpdated'))
         }
       } catch (error) {
+        // Log de erro mantido em todos os ambientes para debug
         console.error("❌ Erro no sync inicial:", error)
         setState(prev => ({
           ...prev,

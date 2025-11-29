@@ -22,7 +22,6 @@ export function Header({ user }: HeaderProps) {
   // Escutar evento de atualização do ranking (disparado pelo auto-sync do primeiro login)
   useEffect(() => {
     const handleRankingUpdated = () => {
-      console.log("📊 Ranking atualizado - recarregando dados...")
       router.refresh()
     }
 

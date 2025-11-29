@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { syncUserRecords } from "@/lib/strava/sync"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { refreshStravaToken } from "@/lib/strava/client"
 
 export async function POST(request: NextRequest) {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar tokens do banco de dados (mais atualizados)
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { data: profile } = await supabase
       .from("profiles")
       .select("strava_access_token, strava_refresh_token, strava_token_expires_at")

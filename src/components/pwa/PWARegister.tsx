@@ -9,7 +9,9 @@ export function PWARegister() {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          console.log("✅ Service Worker registrado:", registration.scope)
+          if (process.env.NODE_ENV === 'development') {
+            console.log("✅ Service Worker registrado:", registration.scope)
+          }
 
           // Verificar por updates
           registration.addEventListener("updatefound", () => {
@@ -17,14 +19,14 @@ export function PWARegister() {
             if (newWorker) {
               newWorker.addEventListener("statechange", () => {
                 if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                  // Nova versão disponível
-                  console.log("🔄 Nova versão do app disponível")
+                  // Nova versão disponível - pode mostrar toast no futuro
                 }
               })
             }
           })
         })
         .catch((error) => {
+          // Manter log de erro para debug
           console.error("❌ Erro ao registrar Service Worker:", error)
         })
     }

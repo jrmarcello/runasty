@@ -238,18 +238,18 @@ export async function getActivityDetails(
     )
 
     if (response.status === 429) {
-      console.warn(`⚠️ Rate limit atingido, pulando atividade ${activityId}`)
+      // Rate limit - não logar em prod para evitar poluição
       return null
     }
 
     if (!response.ok) {
-      console.warn(`⚠️ Erro ${response.status} na atividade ${activityId}`)
+      // Erro de API - manter silencioso (retorna null)
       return null
     }
 
     return response.json()
-  } catch (error) {
-    console.warn(`⚠️ Timeout/erro na atividade ${activityId}:`, error)
+  } catch {
+    // Timeout ou erro de rede - retorna null silenciosamente
     return null
   }
 }

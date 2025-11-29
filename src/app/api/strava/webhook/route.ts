@@ -59,10 +59,13 @@ export async function GET(request: NextRequest) {
 
   // Verificar se é uma requisição de validação válida
   if (mode === "subscribe" && token === verifyToken) {
-    console.log("✅ Webhook validado com sucesso")
+    if (process.env.NODE_ENV === 'development') {
+      console.log("✅ Webhook validado com sucesso")
+    }
     return NextResponse.json({ "hub.challenge": challenge })
   }
 
+  // Log de segurança mantido (tentativa inválida pode ser ataque)
   console.warn("❌ Tentativa de validação inválida:", { mode, token })
   return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 }
@@ -76,21 +79,21 @@ export async function POST(request: NextRequest) {
   try {
     const event: StravaWebhookEvent = await request.json()
     
-    console.log("📥 Webhook recebido:", {
-      type: event.object_type,
-      aspect: event.aspect_type,
-      owner: event.owner_id,
-      activity: event.object_id,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log("📥 Webhook recebido:", {
+        type: event.object_type,
+        aspect: event.aspect_type,
+        owner: event.owner_id,
+        activity: event.object_id,
+      })
+    }
 
     // Só processar eventos de atividades (criação ou atualização)
     if (event.object_type !== "activity") {
-      console.log("⏭️ Ignorando evento não-atividade")
       return NextResponse.json({ received: true })
     }
 
     if (event.aspect_type === "delete") {
-      console.log("⏭️ Ignorando deleção de atividade")
       return NextResponse.json({ received: true })
     }
 
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError || !profile) {
-      console.log("⏭️ Usuário não encontrado no Runasty:", stravaId)
+      // Usuário não usa Runasty - silencioso em prod
       return NextResponse.json({ received: true })
     }
 
@@ -116,7 +119,9 @@ export async function POST(request: NextRequest) {
       const now = new Date()
 
       if (now >= expiresAt && profile.strava_refresh_token) {
-        console.log("🔄 Renovando token expirado para usuário:", stravaId)
+        if (process.env.NODE_ENV === 'development') {
+          console.log("🔄 Renovando token expirado para usuário:", stravaId)
+        }
         
         try {
           const newTokens = await refreshStravaToken(profile.strava_refresh_token)
@@ -139,22 +144,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (!accessToken) {
-      console.log("⏭️ Usuário sem token de acesso:", stravaId)
+      // Usuário sem token - silencioso em prod
       return NextResponse.json({ received: true })
     }
 
     // Sincronizar records do usuário
-    console.log("🔄 Sincronizando records para:", stravaId)
-    
     const result = await syncUserRecords(stravaId, accessToken, {
       isAutoSync: true, // Webhook é considerado auto-sync
       force: false,
     })
 
-    if (result.success) {
-      console.log("✅ Sync via webhook concluído:", result.message)
-    } else {
-      console.log("⚠️ Sync via webhook com aviso:", result.message)
+    if (process.env.NODE_ENV === 'development') {
+      if (result.success) {
+        console.log("✅ Sync via webhook concluído:", result.message)
+      } else {
+        console.log("⚠️ Sync via webhook com aviso:", result.message)
+      }
     }
 
     // Sempre retornar 200 para o Strava não reenviar
