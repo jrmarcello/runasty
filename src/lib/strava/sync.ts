@@ -9,7 +9,7 @@
  * - Primeiro login: busca histórico completo com paginação otimizada
  */
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import {
   getActivitiesAfter,
   getActivityDetails,
@@ -57,7 +57,8 @@ export async function syncUserRecords(
   let apiCalls = 0
 
   try {
-    const supabase = await createClient()
+    // Usar admin client para bypasser RLS (NextAuth não autentica no Supabase)
+    const supabase = createAdminClient()
 
     // Verificar última sincronização (rate limiting)
     const { data: profile } = await supabase
@@ -280,7 +281,7 @@ function mapEffortToDistance(effortName: string): DistanceType | null {
  * Se sim, atualiza a tabela ranking_history
  */
 async function checkAndUpdateKing(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   stravaId: number,
   distanceType: DistanceType,
   timeSeconds: number

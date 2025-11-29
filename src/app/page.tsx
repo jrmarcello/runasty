@@ -10,6 +10,9 @@ import { MyRecords } from "@/components/ranking/my-records"
 import { Avatar } from "@/components/ui/avatar"
 import { RankingTableSkeleton } from "@/components/ui/skeleton"
 
+// Força renderização dinâmica (sem cache) para sempre buscar dados atualizados
+export const dynamic = "force-dynamic"
+
 // Formata segundos para mm:ss ou hh:mm:ss
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
