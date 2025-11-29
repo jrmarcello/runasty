@@ -140,7 +140,7 @@ CREATE TRIGGER on_records_updated
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- Usamos service_role key para operações do backend
--- RLS permite leitura pública, escrita via service_role
+-- RLS permite leitura pública, escrita APENAS via service_role
 -- ============================================
 
 -- Habilitar RLS em todas as tabelas
@@ -149,57 +149,37 @@ ALTER TABLE public.records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ranking_history ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
--- PROFILES: Leitura pública, escrita via service_role
+-- PROFILES: Apenas leitura pública
+-- Escrita bloqueada para anon (só service_role pode escrever)
 -- ============================================
 CREATE POLICY "profiles_select_policy"
     ON public.profiles FOR SELECT
     USING (true);
 
-CREATE POLICY "profiles_insert_policy"
-    ON public.profiles FOR INSERT
-    WITH CHECK (true);
-
-CREATE POLICY "profiles_update_policy"
-    ON public.profiles FOR UPDATE
-    USING (true);
-
-CREATE POLICY "profiles_delete_policy"
-    ON public.profiles FOR DELETE
-    USING (true);
+-- NOTA: Sem políticas de INSERT/UPDATE/DELETE = bloqueado para anon
+-- service_role bypassa RLS automaticamente
 
 -- ============================================
--- RECORDS: Leitura pública, escrita via service_role
+-- RECORDS: Apenas leitura pública
+-- Escrita bloqueada para anon (só service_role pode escrever)
 -- ============================================
 CREATE POLICY "records_select_policy"
     ON public.records FOR SELECT
     USING (true);
 
-CREATE POLICY "records_insert_policy"
-    ON public.records FOR INSERT
-    WITH CHECK (true);
-
-CREATE POLICY "records_update_policy"
-    ON public.records FOR UPDATE
-    USING (true);
-
-CREATE POLICY "records_delete_policy"
-    ON public.records FOR DELETE
-    USING (true);
+-- NOTA: Sem políticas de INSERT/UPDATE/DELETE = bloqueado para anon
+-- service_role bypassa RLS automaticamente
 
 -- ============================================
--- RANKING_HISTORY: Leitura pública, escrita via service_role
+-- RANKING_HISTORY: Apenas leitura pública
+-- Escrita bloqueada para anon (só service_role pode escrever)
 -- ============================================
 CREATE POLICY "ranking_history_select_policy"
     ON public.ranking_history FOR SELECT
     USING (true);
 
-CREATE POLICY "ranking_history_insert_policy"
-    ON public.ranking_history FOR INSERT
-    WITH CHECK (true);
-
-CREATE POLICY "ranking_history_update_policy"
-    ON public.ranking_history FOR UPDATE
-    USING (true);
+-- NOTA: Sem políticas de INSERT/UPDATE/DELETE = bloqueado para anon
+-- service_role bypassa RLS automaticamente
 
 -- ============================================
 -- VIEWS ÚTEIS

@@ -10,7 +10,7 @@ export function LoginButton() {
   return (
     <button
       onClick={handleLogin}
-      className="group flex items-center justify-center gap-3 w-full bg-[#FC4C02] hover:bg-[#E34402] text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+      className="group flex items-center justify-center gap-3 w-full bg-[#FC4C02] hover:bg-[#E34402] active:bg-[#D03E02] text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] min-h-[56px]"
     >
       {/* Strava Icon */}
       <svg

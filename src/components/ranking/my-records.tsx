@@ -1,5 +1,6 @@
 "use client"
 
+import { Activity } from "lucide-react"
 import type { DistanceType } from "@/types/database"
 
 interface MyRecordsProps {
@@ -17,10 +18,10 @@ function formatTime(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`
 }
 
-const distances: { key: DistanceType; label: string; emoji: string }[] = [
-  { key: "5k", label: "5K", emoji: "🏃" },
-  { key: "10k", label: "10K", emoji: "🏃‍♂️" },
-  { key: "21k", label: "21K", emoji: "🏃‍♀️" },
+const distances: { key: DistanceType; label: string }[] = [
+  { key: "5k", label: "5K" },
+  { key: "10k", label: "10K" },
+  { key: "21k", label: "21K" },
 ]
 
 export function MyRecords({ records }: MyRecordsProps) {
@@ -28,8 +29,8 @@ export function MyRecords({ records }: MyRecordsProps) {
 
   if (!hasRecords) {
     return (
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-        <p className="text-gray-400 text-sm text-center">
+      <div className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
           Sincronize para ver seus recordes
         </p>
       </div>
@@ -37,18 +38,18 @@ export function MyRecords({ records }: MyRecordsProps) {
   }
 
   return (
-    <div className="flex gap-2 sm:gap-4 justify-center">
-      {distances.map(({ key, label, emoji }) => {
+    <div className="flex gap-2 sm:gap-3 justify-center">
+      {distances.map(({ key, label }) => {
         const record = records.get(key)
         return (
           <div
             key={key}
-            className="bg-gray-800/50 border border-gray-700 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-center min-w-[80px] sm:min-w-[100px]"
+            className="flex-1 max-w-[110px] bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl px-3 py-3 sm:px-4 sm:py-4 text-center"
           >
-            <div className="text-xs text-gray-400 mb-1">
-              {emoji} {label}
+            <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1 font-medium uppercase tracking-wide">
+              <Activity size={10} className="sm:w-3 sm:h-3" /> {label}
             </div>
-            <div className="font-mono text-sm sm:text-lg font-bold text-white">
+            <div className="font-mono text-base sm:text-xl font-bold text-gray-900 dark:text-white">
               {record ? formatTime(record.time) : "--:--"}
             </div>
           </div>

@@ -132,6 +132,33 @@ export async function getActivities(
 }
 
 /**
+ * Busca atividades do atleta após uma data específica
+ * Usado para sync incremental - só busca atividades novas
+ * @param afterTimestamp Unix timestamp em segundos
+ */
+export async function getActivitiesAfter(
+  accessToken: string,
+  afterTimestamp: number,
+  perPage = 50
+): Promise<StravaActivity[]> {
+  const response = await fetch(
+    `${STRAVA_API_BASE}/athlete/activities?after=${afterTimestamp}&per_page=${perPage}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Erro ao buscar atividades: ${response.status} - ${error}`)
+  }
+
+  return response.json()
+}
+
+/**
  * Busca detalhes de uma atividade específica (inclui best_efforts)
  */
 export async function getActivityDetails(

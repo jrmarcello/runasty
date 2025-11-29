@@ -1,8 +1,76 @@
 @import "tailwindcss";
 
+/* Habilitar dark mode via classe .dark (para next-themes) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================
+   TEMA CLARO (padrão)
+   ======================== */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Cores de superfície */
+  --surface: #f9fafb;
+  --surface-hover: #f3f4f6;
+  --surface-active: #e5e7eb;
+  
+  /* Bordas */
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  
+  /* Texto */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  
+  /* Cores de destaque */
+  --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-foreground: #ffffff;
+  
+  /* Cards e modais */
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  
+  /* Skeleton */
+  --skeleton: #e5e7eb;
+  --skeleton-shimmer: rgba(255, 255, 255, 0.5);
+}
+
+/* ========================
+   TEMA ESCURO
+   ======================== */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  /* Cores de superfície */
+  --surface: #171717;
+  --surface-hover: #1f1f1f;
+  --surface-active: #262626;
+  
+  /* Bordas */
+  --border: #262626;
+  --border-hover: #404040;
+  
+  /* Texto */
+  --text-primary: #f9fafb;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  
+  /* Cores de destaque */
+  --primary: #fb923c;
+  --primary-hover: #f97316;
+  --primary-foreground: #000000;
+  
+  /* Cards e modais */
+  --card: #171717;
+  --card-hover: #1f1f1f;
+  
+  /* Skeleton */
+  --skeleton: #262626;
+  --skeleton-shimmer: rgba(255, 255, 255, 0.05);
 }
 
 @theme inline {
@@ -12,8 +80,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Fallback para sistema (quando não usando next-themes) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -23,4 +92,116 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* PWA Install Prompt Animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Safe area for iOS notch */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+.safe-area-top {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+/* Skeleton shimmer effect - mais elegante que pulse */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fade in animation para conteúdo carregado */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+/* Scale in animation para modais */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+/* Bounce lento para ícones */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* Pulse lento para destaque */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
 }

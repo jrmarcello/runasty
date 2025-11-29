@@ -22,8 +22,8 @@ export function Avatar({ src, name, size = 40, className = "" }: AvatarProps) {
   if (!src || hasError) {
     return (
       <div
-        className={`rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold ${className}`}
-        style={{ width: size, height: size, fontSize: size * 0.4 }}
+        className={`rounded-full bg-gradient-to-br from-orange-500 to-orange-600 inline-flex items-center justify-center text-white font-bold shrink-0 ${className}`}
+        style={{ width: size, height: size, fontSize: size * 0.4, lineHeight: 1 }}
       >
         {initial}
       </div>
@@ -36,7 +36,7 @@ export function Avatar({ src, name, size = 40, className = "" }: AvatarProps) {
       alt={name || "Avatar"}
       width={size}
       height={size}
-      className={`rounded-full ${className}`}
+      className={`rounded-full inline-block ${className}`}
       onError={() => setHasError(true)}
     />
   )

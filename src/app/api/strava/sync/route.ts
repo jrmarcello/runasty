@@ -1,15 +1,20 @@
 /**
  * API Route: Sincronizar dados do Strava
  * Issue #5: Serviço de Sincronização
+ * 
+ * Estratégia de Rate Limiting:
+ * - Sync manual: cooldown de 15 minutos
+ * - Sync automático: cooldown de 60 minutos
+ * - Parâmetro force para bypass (admin)
  */
 
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { syncUserRecords } from "@/lib/strava/sync"
 import { createClient } from "@/lib/supabase/server"
 import { refreshStravaToken } from "@/lib/strava/client"
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth()
 
@@ -27,6 +32,18 @@ export async function POST() {
         { error: "Strava ID não encontrado na sessão" },
         { status: 400 }
       )
+    }
+
+    // Ler opções do body (opcional)
+    let isAutoSync = false
+    let force = false
+    
+    try {
+      const body = await request.json()
+      isAutoSync = body?.isAutoSync === true
+      force = body?.force === true
+    } catch {
+      // Body vazio ou inválido - usar valores padrão
     }
 
     // Buscar tokens do banco de dados (mais atualizados)
@@ -89,11 +106,20 @@ export async function POST() {
       )
     }
 
-    const result = await syncUserRecords(stravaId, accessToken)
+    const result = await syncUserRecords(stravaId, accessToken, { isAutoSync, force })
+
+    // Se foi pulado por cooldown, retornar 200 com skipped
+    if (result.skipped) {
+      return NextResponse.json({
+        message: result.message,
+        skipped: true,
+        apiCalls: result.apiCalls,
+      })
+    }
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.message, details: result.error },
+        { error: result.message, details: result.error, apiCalls: result.apiCalls },
         { status: 400 }
       )
     }
@@ -101,6 +127,7 @@ export async function POST() {
     return NextResponse.json({
       message: result.message,
       records: result.records,
+      apiCalls: result.apiCalls,
     })
   } catch (error) {
     console.error("Erro na API de sync:", error)

@@ -4,68 +4,119 @@
  * Uso: npx tsx scripts/seed.ts
  */
 
+import { config } from "dotenv"
 import { createClient } from "@supabase/supabase-js"
 
+// Carregar variáveis de ambiente
+config({ path: ".env.local" })
+
+// Usar service_role para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 // Corredores fictícios com tempos realistas
+// Tempos baseados em corredores amadores competitivos brasileiros
 const runners = [
-  // Homens - Elite
+  // ==========================================
+  // VOCÊ - Marcelo Jr (Rei do 5K! 👑)
+  // ==========================================
+  { name: "Marcelo Jr", username: "marcelojr", sex: "M",
+    times: { "5k": 18*60+45, "10k": 42*60+30, "21k": 95*60+0 }, // 18:45 no 5K = Rei!
+    stravaId: 12345678 }, // ID fixo para você
+
+  // ==========================================
+  // HOMENS - Elite Amador (Sub-20 no 5K)
+  // ==========================================
   { name: "Carlos Silva", username: "carlosrun", sex: "M", 
-    times: { "5k": 15*60+30, "10k": 32*60+45, "21k": 72*60+10 } }, // 15:30, 32:45, 1:12:10
+    times: { "5k": 19*60+10, "10k": 40*60+15, "21k": 88*60+30 } },
   { name: "Bruno Oliveira", username: "brunofast", sex: "M",
-    times: { "5k": 16*60+12, "10k": 34*60+20, "21k": 76*60+30 } }, // 16:12, 34:20, 1:16:30
-  
-  // Homens - Intermediário
-  { name: "Pedro Santos", username: "pedrorun", sex: "M",
-    times: { "5k": 20*60+45, "10k": 44*60+30, "21k": 98*60+0 } }, // 20:45, 44:30, 1:38:00
-  { name: "Lucas Ferreira", username: "lucasf", sex: "M",
-    times: { "5k": 22*60+30, "10k": 48*60+15, "21k": 105*60+20 } }, // 22:30, 48:15, 1:45:20
+    times: { "5k": 19*60+45, "10k": 41*60+20, "21k": 90*60+15 } },
   { name: "Rafael Costa", username: "rafaelc", sex: "M",
-    times: { "5k": 24*60+0, "10k": 52*60+30, "21k": 115*60+0 } }, // 24:00, 52:30, 1:55:00
+    times: { "5k": 20*60+30, "10k": 38*60+45, "21k": 85*60+0 } }, // Rei do 10K!
+  { name: "Pedro Santos", username: "pedrorun", sex: "M",
+    times: { "5k": 21*60+15, "10k": 43*60+30, "21k": 82*60+30 } }, // Rei do 21K!
+  
+  // ==========================================
+  // HOMENS - Competitivo (20-25 min no 5K)
+  // ==========================================
+  { name: "Lucas Ferreira", username: "lucasf", sex: "M",
+    times: { "5k": 21*60+50, "10k": 45*60+15, "21k": 98*60+20 } },
   { name: "Thiago Mendes", username: "thiagom", sex: "M",
-    times: { "5k": 25*60+15, "10k": 55*60+0, "21k": 120*60+45 } }, // 25:15, 55:00, 2:00:45
+    times: { "5k": 22*60+30, "10k": 46*60+45, "21k": 102*60+0 } },
+  { name: "André Gomes", username: "andreg", sex: "M",
+    times: { "5k": 23*60+15, "10k": 48*60+30, "21k": 105*60+45 } },
+  { name: "Felipe Rodrigues", username: "feliper", sex: "M",
+    times: { "5k": 24*60+0, "10k": 50*60+20, "21k": 110*60+30 } },
   
-  // Homens - Iniciante
+  // ==========================================
+  // HOMENS - Intermediário (25-30 min no 5K)
+  // ==========================================
   { name: "Fernando Lima", username: "fernandol", sex: "M",
-    times: { "5k": 28*60+30, "10k": 62*60+0, "21k": 135*60+30 } }, // 28:30, 1:02:00, 2:15:30
+    times: { "5k": 25*60+30, "10k": 53*60+0, "21k": 118*60+0 } },
   { name: "João Paulo", username: "jprun", sex: "M",
-    times: { "5k": 30*60+45, "10k": 68*60+20, "21k": 150*60+0 } }, // 30:45, 1:08:20, 2:30:00
+    times: { "5k": 26*60+45, "10k": 55*60+30, "21k": 122*60+15 } },
+  { name: "Ricardo Nunes", username: "ricardon", sex: "M",
+    times: { "5k": 27*60+20, "10k": 57*60+15, "21k": 125*60+30 } },
+  { name: "Gustavo Almeida", username: "gustavoa", sex: "M",
+    times: { "5k": 28*60+50, "10k": 60*60+0, "21k": 132*60+0 } },
   
-  // Mulheres - Elite
+  // ==========================================
+  // HOMENS - Iniciante (30+ min no 5K)
+  // ==========================================
+  { name: "Marcos Vieira", username: "marcosv", sex: "M",
+    times: { "5k": 31*60+15, "10k": 65*60+30, "21k": 145*60+0 } },
+  { name: "Daniel Souza", username: "daniels", sex: "M",
+    times: { "5k": 33*60+0, "10k": 70*60+45, "21k": 155*60+30 } },
+
+  // ==========================================
+  // MULHERES - Elite Amador (Sub-22 no 5K)
+  // ==========================================
   { name: "Ana Beatriz", username: "anabrun", sex: "F",
-    times: { "5k": 17*60+45, "10k": 37*60+30, "21k": 82*60+15 } }, // 17:45, 37:30, 1:22:15
+    times: { "5k": 20*60+30, "10k": 43*60+45, "21k": 96*60+15 } }, // Rainha do 5K!
   { name: "Camila Rocha", username: "camilar", sex: "F",
-    times: { "5k": 18*60+30, "10k": 39*60+45, "21k": 88*60+30 } }, // 18:30, 39:45, 1:28:30
-  
-  // Mulheres - Intermediário
+    times: { "5k": 21*60+15, "10k": 44*60+30, "21k": 98*60+0 } },
   { name: "Juliana Martins", username: "julianam", sex: "F",
-    times: { "5k": 23*60+15, "10k": 50*60+0, "21k": 110*60+20 } }, // 23:15, 50:00, 1:50:20
+    times: { "5k": 22*60+0, "10k": 42*60+15, "21k": 95*60+30 } }, // Rainha do 10K!
+  
+  // ==========================================
+  // MULHERES - Competitivo (22-28 min no 5K)
+  // ==========================================
   { name: "Patricia Alves", username: "patriciaa", sex: "F",
-    times: { "5k": 25*60+30, "10k": 54*60+45, "21k": 118*60+0 } }, // 25:30, 54:45, 1:58:00
+    times: { "5k": 23*60+30, "10k": 48*60+45, "21k": 105*60+0 } },
   { name: "Fernanda Souza", username: "fernandasouza", sex: "F",
-    times: { "5k": 27*60+0, "10k": 58*60+30, "21k": 128*60+15 } }, // 27:00, 58:30, 2:08:15
-  
-  // Mulheres - Iniciante
+    times: { "5k": 24*60+15, "10k": 50*60+30, "21k": 92*60+45 } }, // Rainha do 21K!
   { name: "Mariana Costa", username: "maric", sex: "F",
-    times: { "5k": 32*60+45, "10k": 72*60+0, "21k": 158*60+30 } }, // 32:45, 1:12:00, 2:38:30
-  { name: "Isabela Dias", username: "isabelad", sex: "F",
-    times: { "5k": 35*60+0, "10k": 78*60+30, "21k": 172*60+0 } }, // 35:00, 1:18:30, 2:52:00
+    times: { "5k": 25*60+45, "10k": 52*60+15, "21k": 112*60+30 } },
+  { name: "Letícia Barbosa", username: "leticiab", sex: "F",
+    times: { "5k": 26*60+30, "10k": 54*60+45, "21k": 118*60+0 } },
   
-  // Sem gênero definido
-  { name: "Alex Runner", username: "alexrun", sex: null,
-    times: { "5k": 21*60+30, "10k": 46*60+15, "21k": 102*60+0 } }, // 21:30, 46:15, 1:42:00
+  // ==========================================
+  // MULHERES - Intermediário (28-35 min no 5K)
+  // ==========================================
+  { name: "Isabela Dias", username: "isabelad", sex: "F",
+    times: { "5k": 29*60+0, "10k": 62*60+30, "21k": 138*60+15 } },
+  { name: "Renata Oliveira", username: "renatao", sex: "F",
+    times: { "5k": 31*60+30, "10k": 66*60+0, "21k": 148*60+0 } },
+  { name: "Carla Santos", username: "carlas", sex: "F",
+    times: { "5k": 33*60+45, "10k": 72*60+15, "21k": 160*60+30 } },
+  
+  // ==========================================
+  // MULHERES - Iniciante (35+ min no 5K)
+  // ==========================================
+  { name: "Bruna Ferreira", username: "brunaf", sex: "F",
+    times: { "5k": 36*60+0, "10k": 78*60+30, "21k": 175*60+0 } },
 ]
 
 async function seed() {
   console.log("🌱 Iniciando seed...")
+  console.log(`📊 Total de corredores: ${runners.length}`)
 
   for (const runner of runners) {
-    // Gerar strava_id fictício (números altos para não conflitar)
-    const stravaId = 900000000 + Math.floor(Math.random() * 100000)
+    // Usar ID fixo se definido, senão gerar aleatório
+    const stravaId = (runner as { stravaId?: number }).stravaId || 
+      900000000 + Math.floor(Math.random() * 100000)
 
     // Criar perfil
     const { error: profileError } = await supabase
@@ -138,6 +189,7 @@ async function seed() {
           strava_id: leader.strava_id,
           distance_type: distance,
           started_at: startedAt.toISOString(),
+          record_time_seconds: leader.time_seconds,
         })
 
       console.log(`👑 Líder ${distance}: strava_id ${leader.strava_id}`)
@@ -145,6 +197,7 @@ async function seed() {
   }
 
   console.log("\n🎉 Seed concluído!")
+  console.log("👑 Você (Marcelo Jr) é o Rei do 5K com 18:45!")
 }
 
 seed().catch(console.error)

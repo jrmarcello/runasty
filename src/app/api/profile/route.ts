@@ -42,3 +42,62 @@ export async function GET() {
     )
   }
 }
+
+// DELETE /api/profile - Encerrar conta do usuário
+export async function DELETE() {
+  const session = await auth()
+
+  if (!session?.user?.stravaId) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
+
+  const stravaId = session.user.stravaId
+
+  try {
+    const supabase = await createClient()
+
+    // 1. Deletar records do usuário
+    const { error: recordsError } = await supabase
+      .from('records')
+      .delete()
+      .eq('strava_id', stravaId)
+
+    if (recordsError) {
+      console.error("Erro ao deletar records:", recordsError)
+    }
+
+    // 2. Deletar histórico de ranking
+    const { error: historyError } = await supabase
+      .from('ranking_history')
+      .delete()
+      .eq('strava_id', stravaId)
+
+    if (historyError) {
+      console.error("Erro ao deletar ranking_history:", historyError)
+    }
+
+    // 3. Deletar perfil do usuário
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('strava_id', stravaId)
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: "Erro ao deletar perfil: " + profileError.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Conta encerrada com sucesso" 
+    })
+  } catch (error) {
+    console.error("Erro ao encerrar conta:", error)
+    return NextResponse.json(
+      { error: "Erro ao encerrar conta" },
+      { status: 500 }
+    )
+  }
+}

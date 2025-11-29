@@ -11,10 +11,13 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.27.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.86.0",
+    "lucide-react": "^0.555.0",
     "next": "16.0.5",
     "next-auth": "^5.0.0-beta.30",
+    "next-themes": "^0.4.6",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
@@ -27,10 +30,12 @@
     "@types/react-dom": "^19",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.5",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

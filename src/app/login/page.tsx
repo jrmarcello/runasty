@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
+import { Crown } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { LoginButton } from "@/components/auth/login-button"
+import { Logo } from "@/components/ui/logo"
 
 export default async function LoginPage() {
   const session = await auth()
@@ -11,40 +13,42 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-      <div className="text-center max-w-md px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white px-6 py-12">
+      <div className="text-center max-w-sm w-full space-y-8">
         {/* Logo */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold mb-2">
+        <div className="flex flex-col items-center">
+          <Logo size="xl" showText={false} className="mb-4" />
+          <h1 className="text-4xl sm:text-5xl font-bold">
             <span className="text-orange-500">Run</span>asty
           </h1>
-          <p className="text-gray-400 text-lg">
-            🏆 Ranking Competitivo de Corrida
-          </p>
         </div>
 
         {/* Descrição */}
-        <div className="mb-10 space-y-4">
-          <p className="text-gray-300">
-            Compare seus melhores tempos de corrida com outros atletas.
-          </p>
-          <div className="flex justify-center gap-4 text-sm text-gray-400">
-            <span className="bg-gray-700 px-3 py-1 rounded-full">5K</span>
-            <span className="bg-gray-700 px-3 py-1 rounded-full">10K</span>
-            <span className="bg-gray-700 px-3 py-1 rounded-full">21K</span>
-          </div>
-          <p className="text-orange-400 font-medium">
-            👑 Conquiste o título de Rei/Rainha da Montanha!
-          </p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+          Ranking competitivo de corrida
+        </p>
+
+        {/* Slogan */}
+        <p className="text-orange-500 dark:text-orange-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
+          <Crown size={16} className="text-yellow-500 flex-shrink-0" />
+          Conquiste a coroa e defenda sua dinastia!
+          <Crown size={16} className="text-yellow-500 flex-shrink-0" />
+        </p>
+
+        {/* CTA - Distâncias */}
+        <div className="flex justify-center gap-3">
+          <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-1.5 rounded-full text-sm font-medium">5K</span>
+          <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-1.5 rounded-full text-sm font-medium">10K</span>
+          <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-1.5 rounded-full text-sm font-medium">21K</span>
         </div>
 
         {/* Botão de Login */}
-        <LoginButton />
-
-        {/* Info */}
-        <p className="mt-6 text-xs text-gray-500">
-          Conectamos com sua conta Strava para sincronizar seus melhores tempos automaticamente.
-        </p>
+        <div className="pt-4">
+          <LoginButton />
+          <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
+            Conecte sua conta Strava para participar.
+          </p>
+        </div>
       </div>
     </div>
   )
