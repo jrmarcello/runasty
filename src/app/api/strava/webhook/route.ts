@@ -111,14 +111,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Verificar/renovar token
+    // Verificar/renovar token (renovar se expira em 1 hora ou menos - recomendação Strava API)
     let accessToken = profile.strava_access_token
 
     if (profile.strava_token_expires_at) {
       const expiresAt = new Date(profile.strava_token_expires_at)
       const now = new Date()
+      const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
 
-      if (now >= expiresAt && profile.strava_refresh_token) {
+      if (oneHourFromNow >= expiresAt && profile.strava_refresh_token) {
         if (process.env.NODE_ENV === 'development') {
           console.log("🔄 Renovando token expirado para usuário:", stravaId)
         }
