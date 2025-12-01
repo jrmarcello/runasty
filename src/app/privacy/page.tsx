@@ -119,6 +119,13 @@ export default function PrivacyPage() {
               <li><code>read</code> - Dados básicos do perfil</li>
               <li><code>activity:read_all</code> - Atividades para extrair tempos de corrida</li>
             </ul>
+            <p className="mt-4">
+              <strong>Nota:</strong> A Strava pode monitorar e coletar dados sobre o uso da API pelo Runasty 
+              para fins de melhoria de serviços, suporte e conformidade, conforme sua 
+              <a href="https://www.strava.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline ml-1">
+                Política de Privacidade
+              </a>.
+            </p>
           </section>
 
           <section>
