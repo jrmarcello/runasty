@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Bug, Rocket, Copy, Check, X, Coffee, Zap } from "lucide-react"
 
 // Configurações PIX - devem ser definidas em .env.local
@@ -39,7 +40,7 @@ export function Footer() {
     <>
       {/* Footer */}
       <footer className="mt-8 pb-8">
-        <div className="flex items-center justify-center gap-6 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm">
           <button
             onClick={handleReportBug}
             className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors py-2 px-3 -mx-3 rounded-lg active:bg-gray-100 dark:active:bg-gray-800"
@@ -48,7 +49,7 @@ export function Footer() {
             <span>Reportar bug</span>
           </button>
 
-          <span className="text-gray-300 dark:text-gray-600">·</span>
+          <span className="text-gray-300 dark:text-gray-600 hidden sm:inline">·</span>
 
           {PIX_ENABLED && (
             <button
@@ -59,6 +60,17 @@ export function Footer() {
               <span>Impulsione o projeto</span>
             </button>
           )}
+        </div>
+
+        {/* Links legais */}
+        <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-400 dark:text-gray-500">
+          <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            Privacidade
+          </Link>
+          <span>·</span>
+          <Link href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            Termos
+          </Link>
         </div>
       </footer>
 

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { Crown } from "lucide-react"
 import { auth } from "@/lib/auth"
 import { LoginButton } from "@/components/auth/login-button"
@@ -47,6 +48,16 @@ export default async function LoginPage() {
           <LoginButton />
           <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
             Conecte sua conta Strava para participar.
+          </p>
+          <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            Ao continuar, você concorda com nossa{" "}
+            <Link href="/privacy" className="text-orange-500 hover:underline">
+              Política de Privacidade
+            </Link>{" "}
+            e{" "}
+            <Link href="/terms" className="text-orange-500 hover:underline">
+              Termos de Uso
+            </Link>.
           </p>
         </div>
       </div>
