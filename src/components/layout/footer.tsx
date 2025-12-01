@@ -72,6 +72,10 @@ export function Footer() {
           <Link href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             Termos
           </Link>
+          <span>·</span>
+          <Link href="/support" className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            Suporte
+          </Link>
         </div>
 
         {/* Strava Attribution - Required by Strava API Guidelines */}
