@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import Image from "next/image"
+import Link from "next/link"
 import { signOut } from "next-auth/react"
 import { ThemeDropdown } from "@/components/ui/theme-toggle"
-import { Trash2, AlertTriangle, X } from "lucide-react"
+import { Trash2, AlertTriangle, X, TrendingUp } from "lucide-react"
 
 // Formata tempo relativo
 function formatTimeAgo(date: Date | null): string {
@@ -224,6 +225,16 @@ export function UserMenu({ user, onSync, isSyncing, lastSyncAt }: UserMenuProps)
               </svg>
             {isSyncing ? "Sincronizando..." : "Forçar Sincronização"}
           </button>
+
+          {/* Meu Perfil / Insights */}
+          <Link
+            href="/profile"
+            onClick={() => setIsOpen(false)}
+            className="w-full px-4 py-3 text-left text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 hover:text-gray-900 dark:hover:text-white flex items-center gap-3 transition-colors"
+          >
+            <TrendingUp size={20} />
+            Meus Insights
+          </Link>
 
           {/* Seletor de Tema */}
           <div className="border-t border-gray-100 dark:border-gray-700">
