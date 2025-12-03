@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ConsentModal } from "./consent-modal"
@@ -21,15 +21,11 @@ export function ConsentWrapper({
   initialHasConsent 
 }: ConsentWrapperProps) {
   const router = useRouter()
-  const [showModal, setShowModal] = useState(false)
-  const [hasConsent, setHasConsent] = useState(initialHasConsent)
+  // Mostrar modal imediatamente se não tem consentimento
+  const [showModal, setShowModal] = useState(initialHasConsent !== true)
 
-  useEffect(() => {
-    // Mostrar modal se não tem consentimento (null = novo usuário, false = recusou)
-    if (hasConsent !== true) {
-      setShowModal(true)
-    }
-  }, [hasConsent])
+  // Debug - remover depois
+  console.log("[ConsentWrapper] initialHasConsent:", initialHasConsent, "showModal:", initialHasConsent !== true)
 
   const handleAccept = async () => {
     try {
@@ -43,7 +39,6 @@ export function ConsentWrapper({
         throw new Error("Erro ao salvar consentimento")
       }
 
-      setHasConsent(true)
       setShowModal(false)
       router.refresh() // Recarregar para atualizar o ranking
     } catch (error) {
