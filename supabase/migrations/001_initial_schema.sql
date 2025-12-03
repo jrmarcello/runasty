@@ -122,14 +122,19 @@ CREATE INDEX IF NOT EXISTS idx_ranking_history_strava ON public.ranking_history(
 
 -- ============================================
 -- FUNÇÃO: Atualizar updated_at automaticamente
+-- SECURITY INVOKER + search_path fixo para segurança
 -- ============================================
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Triggers para updated_at
 DROP TRIGGER IF EXISTS on_profiles_updated ON public.profiles;
@@ -190,10 +195,13 @@ CREATE POLICY "ranking_history_select_policy"
 
 -- ============================================
 -- VIEWS ÚTEIS
+-- Usando security_invoker para respeitar RLS
 -- ============================================
 
--- View: Ranking atual por distância
-CREATE OR REPLACE VIEW public.current_rankings AS
+-- View: Ranking atual por distância (SECURITY INVOKER)
+CREATE OR REPLACE VIEW public.current_rankings
+WITH (security_invoker = true)
+AS
 SELECT 
     r.id,
     r.strava_id,
@@ -212,8 +220,10 @@ FROM public.records r
 JOIN public.profiles p ON r.strava_id = p.strava_id
 ORDER BY r.distance_type, r.time_seconds;
 
--- View: Líderes atuais (Reis da Montanha)
-CREATE OR REPLACE VIEW public.current_leaders AS
+-- View: Líderes atuais (Reis da Montanha) (SECURITY INVOKER)
+CREATE OR REPLACE VIEW public.current_leaders
+WITH (security_invoker = true)
+AS
 SELECT 
     rh.id,
     rh.strava_id,
