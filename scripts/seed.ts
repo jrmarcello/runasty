@@ -101,6 +101,8 @@ async function seed() {
         avatar_url: null, // Usar fallback de iniciais
         sex: runner.sex,
         last_sync_at: new Date().toISOString(), // Simula sync recente
+        consent_public_ranking: true, // Todos os corredores fictícios aceitaram os termos
+        consent_at: new Date().toISOString(),
       }, { onConflict: "strava_id" })
 
     if (profileError) {
