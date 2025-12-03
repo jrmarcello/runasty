@@ -8,6 +8,11 @@ import { NextResponse } from "next/server"
  * @see https://www.strava.com/legal/api
  */
 
+interface ConsentData {
+  consent_public_ranking: boolean | null
+  consent_at: string | null
+}
+
 // GET /api/profile/consent - Verificar status do consentimento
 export async function GET() {
   const session = await auth()
@@ -30,9 +35,11 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const consentData = data as unknown as ConsentData | null
+
     return NextResponse.json({
-      hasConsent: data?.consent_public_ranking === true,
-      consentAt: data?.consent_at || null,
+      hasConsent: consentData?.consent_public_ranking === true,
+      consentAt: consentData?.consent_at || null,
     })
   } catch (error) {
     console.error("Erro ao verificar consentimento:", error)
@@ -69,7 +76,7 @@ export async function POST(request: Request) {
       .update({
         consent_public_ranking: consent,
         consent_at: consent ? new Date().toISOString() : null,
-      })
+      } as never)
       .eq("strava_id", session.user.stravaId)
 
     if (error) {
@@ -107,7 +114,7 @@ export async function DELETE() {
       .update({
         consent_public_ranking: false,
         consent_at: null,
-      })
+      } as never)
       .eq("strava_id", session.user.stravaId)
 
     if (error) {
