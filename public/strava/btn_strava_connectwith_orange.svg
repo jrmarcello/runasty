@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="193" height="48" viewBox="0 0 193 48">
+  <rect fill="#FC4C02" width="193" height="48" rx="4"/>
+  <g fill="#FFFFFF">
+    <path d="M24.5 13.8l2.8 5.6h4.2l-7-13.8-7 13.8h4.2l2.8-5.6zm7 5.6l-2.1-4.1h-3.1l5.2 10.2 5.1-10.2h-3.1l-2 4.1z"/>
+    <text x="52" y="29" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Connect with Strava</text>
+  </g>
+</svg>

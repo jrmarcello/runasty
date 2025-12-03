@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { DistanceType, Gender } from "@/types/database"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { RankingClient, type RankingEntry } from "@/components/ranking/ranking-client"
+import { ConsentWrapper } from "@/components/auth/consent-wrapper"
 
 // Força renderização dinâmica (sem cache) para sempre buscar dados atualizados
 export const dynamic = "force-dynamic"
@@ -19,8 +21,19 @@ export default async function Home() {
 
   const { user } = session
   const supabase = await createClient()
+  const supabaseAdmin = createAdminClient()
+
+  // Verificar consentimento do usuário atual
+  const { data: userProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("consent_public_ranking")
+    .eq("strava_id", user.stravaId)
+    .single()
+
+  const hasConsent = (userProfile as { consent_public_ranking?: boolean } | null)?.consent_public_ranking ?? null
 
   // Buscar TODOS os records de uma vez (todas as distâncias)
+  // FILTRO IMPORTANTE: Apenas usuários que consentiram aparecem no ranking público
   const { data: rawData } = await supabase
     .from("records")
     .select(`
@@ -32,7 +45,8 @@ export default async function Home() {
         full_name,
         username,
         avatar_url,
-        sex
+        sex,
+        consent_public_ranking
       )
     `)
     .order("time_seconds", { ascending: true })
@@ -54,7 +68,7 @@ export default async function Home() {
     }
   }
 
-  // Processar records
+  // Processar records - FILTRAR apenas quem tem consentimento
   type RawRecord = {
     strava_id: number
     distance_type: DistanceType
@@ -65,22 +79,26 @@ export default async function Home() {
       username: string | null
       avatar_url: string | null
       sex: Gender
+      consent_public_ranking: boolean | null
     }
   }
 
   const allRecords: RankingEntry[] = rawData
-    ? (rawData as unknown as RawRecord[]).map((record) => ({
-        strava_id: record.strava_id,
-        distance_type: record.distance_type,
-        time_seconds: record.time_seconds,
-        achieved_at: record.achieved_at,
-        full_name: record.profiles.full_name,
-        username: record.profiles.username,
-        avatar_url: record.profiles.avatar_url,
-        sex: record.profiles.sex,
-        leadership_started_at:
-          leadershipMap.get(record.distance_type)?.get(record.strava_id) || record.achieved_at,
-      }))
+    ? (rawData as unknown as RawRecord[])
+        // Filtrar apenas usuários com consentimento explícito
+        .filter((record) => record.profiles.consent_public_ranking === true)
+        .map((record) => ({
+          strava_id: record.strava_id,
+          distance_type: record.distance_type,
+          time_seconds: record.time_seconds,
+          achieved_at: record.achieved_at,
+          full_name: record.profiles.full_name,
+          username: record.profiles.username,
+          avatar_url: record.profiles.avatar_url,
+          sex: record.profiles.sex,
+          leadership_started_at:
+            leadershipMap.get(record.distance_type)?.get(record.strava_id) || record.achieved_at,
+        }))
     : []
 
   // Buscar records do usuário atual
@@ -102,19 +120,21 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
-      <Header user={{ name: user.name, image: user.image }} />
+    <ConsentWrapper userName={user.name ?? null} initialHasConsent={hasConsent}>
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
+        <Header user={{ name: user.name, image: user.image }} />
 
-      <div className="max-w-2xl mx-auto px-4 py-5 sm:py-6">
-        <RankingClient
-          allRecords={allRecords}
-          currentUserStravaId={user.stravaId ?? null}
-          userRecords={userRecords}
-        />
+        <div className="max-w-2xl mx-auto px-4 py-5 sm:py-6">
+          <RankingClient
+            allRecords={allRecords}
+            currentUserStravaId={user.stravaId ?? null}
+            userRecords={userRecords}
+          />
 
-        {/* Footer com links */}
-        <Footer />
-      </div>
-    </main>
+          {/* Footer com links */}
+          <Footer />
+        </div>
+      </main>
+    </ConsentWrapper>
   )
 }

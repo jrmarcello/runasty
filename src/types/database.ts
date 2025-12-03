@@ -19,6 +19,8 @@ export interface Profile {
   strava_refresh_token: string | null
   strava_token_expires_at: string | null // ISO timestamp
   last_sync_at: string | null // ISO timestamp
+  consent_public_ranking: boolean | null // Consentimento para ranking público (NULL = não perguntado)
+  consent_at: string | null // ISO timestamp do consentimento
   created_at: string
   updated_at: string
 }
@@ -33,6 +35,8 @@ export interface ProfileInsert {
   strava_refresh_token?: string | null
   strava_token_expires_at?: string | null
   last_sync_at?: string | null
+  consent_public_ranking?: boolean
+  consent_at?: string | null
 }
 
 export interface ProfileUpdate {
@@ -44,6 +48,8 @@ export interface ProfileUpdate {
   strava_refresh_token?: string | null
   strava_token_expires_at?: string | null
   last_sync_at?: string | null
+  consent_public_ranking?: boolean
+  consent_at?: string | null
 }
 
 // ============================================

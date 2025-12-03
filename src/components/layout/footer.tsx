@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Bug, Rocket, Copy, Check, X, Coffee, Zap } from "lucide-react"
-import { PoweredByStrava } from "@/components/auth/login-button"
+import { PoweredByStravaOfficial } from "@/components/auth/login-button"
 
 // Configurações PIX - devem ser definidas em .env.local
 const PIX_KEY = process.env.NEXT_PUBLIC_PIX_KEY || ""
@@ -80,7 +80,7 @@ export function Footer() {
 
         {/* Strava Attribution - Required by Strava API Guidelines */}
         <div className="flex justify-center mt-4">
-          <PoweredByStrava />
+          <PoweredByStravaOfficial />
         </div>
       </footer>
 

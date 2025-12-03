@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="162" height="30" viewBox="0 0 162 30">
+  <g fill="#999999">
+    <path d="M12.3 8.4l1.7 3.4h2.5l-4.2-8.3-4.2 8.3h2.5l1.7-3.4zm4.2 3.4l-1.3-2.5h-1.9l3.2 6.1 3-6.1h-1.8l-1.2 2.5z" transform="translate(2, 5)"/>
+    <text x="30" y="19" font-family="Arial, sans-serif" font-size="10" font-weight="bold" letter-spacing="0.5">POWERED BY STRAVA</text>
+  </g>
+</svg>

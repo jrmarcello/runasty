@@ -24,11 +24,6 @@ export default async function LoginPage() {
           </h1>
         </div>
 
-        {/* Descrição */}
-        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-          Ranking competitivo de corrida
-        </p>
-
         {/* Slogan */}
         <p className="text-orange-500 dark:text-orange-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
           <Crown size={16} className="text-yellow-500 flex-shrink-0" />

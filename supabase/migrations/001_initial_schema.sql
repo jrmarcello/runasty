@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     -- Controle de sincronização
     last_sync_at TIMESTAMPTZ,
     
+    -- Consentimento para ranking público (Strava API Agreement Section 2.10)
+    -- NULL = não perguntado, TRUE = consentiu, FALSE = recusou
+    consent_public_ranking BOOLEAN DEFAULT NULL,
+    consent_at TIMESTAMPTZ DEFAULT NULL,
+    
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -47,6 +52,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 -- Índices para buscas frequentes
 CREATE INDEX IF NOT EXISTS idx_profiles_sex ON public.profiles(sex);
+CREATE INDEX IF NOT EXISTS idx_profiles_consent ON public.profiles(consent_public_ranking) 
+    WHERE consent_public_ranking = TRUE;
 
 -- ============================================
 -- TABELA: records
@@ -231,5 +238,7 @@ COMMENT ON TABLE public.ranking_history IS 'Histórico de liderança no ranking 
 
 COMMENT ON COLUMN public.profiles.strava_id IS 'ID do atleta no Strava, usado como chave primária';
 COMMENT ON COLUMN public.profiles.sex IS 'Gênero: M=Masculino, F=Feminino, NULL=Não informado';
+COMMENT ON COLUMN public.profiles.consent_public_ranking IS 'Consentimento explícito para exibição no ranking público. NULL=não perguntado, TRUE=consentiu, FALSE=recusou';
+COMMENT ON COLUMN public.profiles.consent_at IS 'Data/hora em que o usuário deu ou revogou o consentimento';
 COMMENT ON COLUMN public.records.time_seconds IS 'Tempo do recorde em segundos para facilitar ordenação';
 COMMENT ON COLUMN public.ranking_history.ended_at IS 'NULL indica que ainda é o líder atual';

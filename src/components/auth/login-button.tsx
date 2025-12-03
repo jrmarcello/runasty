@@ -1,9 +1,41 @@
 "use client"
 
 import { signIn } from "next-auth/react"
+import Image from "next/image"
 
 /**
- * Botão de login com Strava
+ * Botão de login com Strava - Versão com imagem oficial
+ * Seguindo as Brand Guidelines do Strava:
+ * - Usa imagem oficial do botão "Connect with Strava"
+ * - Cor laranja oficial (#FC4C02)
+ * @see https://developers.strava.com/guidelines/
+ */
+export function LoginButtonOfficial() {
+  const handleLogin = () => {
+    signIn("strava", { callbackUrl: "/" })
+  }
+
+  return (
+    <button
+      onClick={handleLogin}
+      className="group flex items-center justify-center w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+      aria-label="Connect with Strava"
+    >
+      {/* Imagem oficial do Strava - botão laranja */}
+      <Image
+        src="/strava/btn_strava_connectwith_orange.svg"
+        alt="Connect with Strava"
+        width={193}
+        height={48}
+        className="h-12 w-auto"
+        priority
+      />
+    </button>
+  )
+}
+
+/**
+ * Botão de login com Strava - Versão customizada
  * Seguindo as Brand Guidelines do Strava:
  * - Usa cores oficiais (#FC4C02)
  * - Texto "Connect with Strava" ou "Conectar com Strava"
@@ -34,7 +66,41 @@ export function LoginButton() {
 }
 
 /**
- * Badge "Powered by Strava"
+ * Badge "Powered by Strava" - Versão com imagem oficial
+ * Obrigatório para apps que usam dados do Strava
+ * @see https://developers.strava.com/guidelines/
+ */
+export function PoweredByStravaOfficial({ className = "" }: { className?: string }) {
+  return (
+    <a
+      href="https://www.strava.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`inline-flex items-center transition-opacity hover:opacity-80 ${className}`}
+      title="Powered by Strava"
+    >
+      {/* Light mode: gray logo */}
+      <Image
+        src="/strava/api_logo_pwrdBy_strava_horiz_gray.svg"
+        alt="Powered by Strava"
+        width={162}
+        height={30}
+        className="h-6 w-auto dark:hidden"
+      />
+      {/* Dark mode: orange logo */}
+      <Image
+        src="/strava/api_logo_pwrdBy_strava_horiz_light.svg"
+        alt="Powered by Strava"
+        width={162}
+        height={30}
+        className="h-6 w-auto hidden dark:block"
+      />
+    </a>
+  )
+}
+
+/**
+ * Badge "Powered by Strava" - Versão customizada
  * Obrigatório para apps que usam dados do Strava
  * @see https://developers.strava.com/guidelines/
  */

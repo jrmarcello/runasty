@@ -9,10 +9,10 @@ import {
   Calendar,
   Target,
   ChevronDown,
-  ChevronUp,
-  ExternalLink
+  ChevronUp
 } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
+import { ViewOnStravaLink } from "@/components/auth/login-button"
 import type { DistanceType, Gender } from "@/types/database"
 import Link from "next/link"
 
@@ -284,15 +284,9 @@ export function ProfileInsights({ profile, stats }: ProfileInsightsProps) {
 
                   {/* Link para Strava */}
                   {stat.activityId && (
-                    <a
-                      href={`https://www.strava.com/activities/${stat.activityId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 flex items-center justify-center gap-2 py-2 px-4 bg-[#FC4C02] hover:bg-[#e04402] text-white text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                      Ver atividade no Strava
-                    </a>
+                    <div className="mt-4 flex justify-center">
+                      <ViewOnStravaLink activityId={stat.activityId} />
+                    </div>
                   )}
 
                   {/* Barra de Percentil Visual */}
