@@ -24,9 +24,6 @@ export function ConsentWrapper({
   // Mostrar modal imediatamente se não tem consentimento
   const [showModal, setShowModal] = useState(initialHasConsent !== true)
 
-  // Debug - remover depois
-  console.log("[ConsentWrapper] initialHasConsent:", initialHasConsent, "showModal:", initialHasConsent !== true)
-
   const handleAccept = async () => {
     try {
       const response = await fetch("/api/profile/consent", {
